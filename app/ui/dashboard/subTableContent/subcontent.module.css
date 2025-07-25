@@ -1,0 +1,32 @@
+
+.container {
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    padding: 10px;
+    background-color: rgba(128, 128, 128, 0.3);
+    border: 2px solid #4a5565;
+    margin-top: 5px;
+    border-radius: 7px;
+    gap: 30px;
+}
+
+.primaryContainer {
+    display: flex;
+    gap: 10px;
+}
+.subContainer{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.primarySubConytainer {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+    justify-content: space-between;
+}
+.buttonArrange {
+    display: flex;
+    gap: 10px;
+}

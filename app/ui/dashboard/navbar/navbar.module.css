@@ -1,0 +1,44 @@
+.container {
+    padding: 20px;
+    /* border-radius: 10px; */
+    background-color: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 8px rgba(44, 1, 1, 0.158);
+    margin-bottom: 2px;
+}
+.title {
+    color: var(--textSoft);
+    font-weight: bold;
+    text-transform: capitalize;
+}
+.menu {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.leftSideContainer{
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+.leftSide {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+.leftSideLogo {
+    position: absolute;
+    right: 54%;
+    background-color: rgba(59, 55, 55, 0.9);
+    border-radius: 30px;
+}
+.leftSideText{
+    z-index: 10;
+}
+.leftSideRight{
+    padding: 8px 13px;
+    border-radius: 30px;
+    background-color: #0094FE;
+}

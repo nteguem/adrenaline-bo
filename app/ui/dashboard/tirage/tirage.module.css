@@ -1,0 +1,50 @@
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.subContainer{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: anchor-center;
+}
+
+.headerText {
+    font-size: xx-large;
+}
+.filter {
+    background-color: #141414;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 5px;
+}
+
+.headerContainer {
+    background-color: #141414;
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    border-radius: 5px;
+    border: 2px solid #4a5565;
+}
+.filterLeft {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.detailElements{
+    display: flex;
+    justify-content: space-evenly;
+    width: 100%;
+}
+.middleTabs {
+    display: flex;
+    gap: 15px;
+}

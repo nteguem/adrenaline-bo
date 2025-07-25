@@ -1,0 +1,31 @@
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.subContainer{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: anchor-center;
+}
+
+.headerText {
+    font-size: xx-large;
+}
+.filter {
+    background-color: #141414;
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 12px;
+}
+.filterLeft {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}

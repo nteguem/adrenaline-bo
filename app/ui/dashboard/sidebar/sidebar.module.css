@@ -1,0 +1,10 @@
+.container{
+    position: sticky;
+    top: 40px;
+}
+.list{
+    list-style: none;
+}
+.topContent {
+    margin-top: 20%;
+}
