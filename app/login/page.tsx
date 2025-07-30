@@ -11,15 +11,17 @@ import {
   Typography,
 } from "@mui/material";
 import Image from "next/image";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 export default function Page() {
   const [state, action] = useActionState(login, undefined);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   // const session = await getSession();
   return (
     <section className="login">
-      <form action={action}>
+      <form action={action} autoComplete="off">
         <div
           className="login-container"
           style={{ display: "flex", flexDirection: "column", gap: "20px" }}
@@ -58,9 +60,16 @@ export default function Page() {
               type="text"
               placeholder={"example@gmail.com"}
               id="email"
-              // value={value}
-              // onChange={onChange}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onPaste={(e) => {
+                // Forcer la mise à jour après le paste
+                setTimeout(() => {
+                  setEmail(e.target.value);
+                }, 0);
+              }}
               name={"email"}
+              autoComplete="off"
               className={` text-white w-full border-1 rounded p-3 mb-3 placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-300 ${"mb-0"}`}
             />
             {state?.errors?.email && (
@@ -70,9 +79,16 @@ export default function Page() {
               type="password"
               id="password"
               placeholder={"******"}
-              // value={value}
-              // onChange={onChange}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onPaste={(e) => {
+                // Forcer la mise à jour après le paste
+                setTimeout(() => {
+                  setPassword(e.target.value);
+                }, 0);
+              }}
               name={"password"}
+              autoComplete="new-password"
               className={` text-white w-full border-1 rounded p-3 mb-3 placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-300 ${"mb-0"}`}
             />
             {state?.errors?.password && (

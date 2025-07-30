@@ -16,6 +16,7 @@ import StatusDesign from "./StatusDesign";
 import styles from "@/app/ui/dashboard/customTable/customTable.module.css";
 import SubTableContent from "./SubTableContent";
 import TirageDialog from "./CreateTirageDialog";
+import NewActionButtons from "./NewActionButtons"; // Import du nouveau composant
 
 interface Column {
   id: "date" | "ville" | "participants" | "actions";
@@ -81,6 +82,60 @@ interface DateColumn {
   format?: (value: number) => string;
   formatDate?: (value: string) => string;
 }
+
+// Interfaces pour les données
+interface DateData {
+  id: string;
+  date: string;
+  endDate: string;
+  ville: string;
+  salle: string;
+  participants: number;
+  statut: string;
+  tirage: string;
+  placement?: string[];
+  actions: string;
+}
+
+interface HistoryData {
+  id: string;
+  date: string;
+  endDate: string;
+  ville: string;
+  salle: string;
+  participants: number;
+  statut: string;
+  gagnants: number;
+  actions: number;
+}
+
+interface TourData {
+  id: string;
+  date: string;
+  endDate: string;
+  ville: string;
+  salle: string;
+  participants: number;
+  statut: string;
+  tirage: string;
+  placement?: string[];
+  actions: string;
+}
+
+interface TirageData {
+  id: string;
+  date: string;
+  endDate: string;
+  ville: string;
+  salle: string;
+  datetirage: string;
+  participants: number;
+  gagnants: string;
+  statut: string;
+  actions: string;
+}
+
+// Configuration des colonnes (inchangée)
 const tirageColumns: readonly TirageColumn[] = [
   {
     id: "date",
@@ -89,20 +144,12 @@ const tirageColumns: readonly TirageColumn[] = [
     formatDate: (value: string) => new Date(value).toLocaleDateString(),
   },
   { id: "ville", label: "Ville", minWidth: 100 },
-  // { id: "datetirage", label: "Date tirage", minWidth: 100 },
-  // {
-  //   id: "gagnants",
-  //   label: "Nb gagnants",
-  //   minWidth: 170,
-  //   align: "right",
-  // },
   {
     id: "statut",
     label: "Statut",
     minWidth: 170,
     align: "right",
   },
-
   {
     id: "actions",
     label: "Actions",
@@ -110,6 +157,7 @@ const tirageColumns: readonly TirageColumn[] = [
     align: "right",
   },
 ];
+
 const dateColumns: readonly DateColumn[] = [
   {
     id: "date",
@@ -237,66 +285,28 @@ const historyColumns: readonly HistoryColumn[] = [
   },
 ];
 
-interface Data {
-  id: string;
-  date: string;
-  ville: string;
-  participants: number;
-  actions: number;
-}
-
-interface HistoryData {
-  id: string;
-  date: string;
-  endDate: string;
-  ville: string;
-  salle: string;
-  participants: number;
-  statut: string;
-  gagnants: number;
-  actions: number;
-}
-interface TourData {
-  id: string;
-  date: string;
-  endDate: string;
-  ville: string;
-  salle: string;
-  participants: number;
-  statut: string;
-  tirage: string;
-  actions: string;
-}
-interface DateData {
-  id: string;
-  date: string;
-  endDate: string;
-  ville: string;
-  salle: string;
-  participants: number;
-  statut: string;
-  tirage: string;
-  actions: string;
-}
-
-interface TirageData {
-  id: string;
-  date: string;
-  endDate: string;
-  ville: string;
-  salle: string;
-  datetirage: string;
-  participants: number;
-  gagnants: string;
-  statut: string;
-  actions: string;
-}
-
+// Interface mise à jour pour les props
 type Props = {
   title: string;
   tableType: "tirage" | "history" | "tour" | "date" | "tirage_s";
   pageType: "standard" | "tour" | "date" | "tirage_s";
-  rows: DateData[] | HistoryData[];
+  rows: DateData[] | HistoryData[] | TourData[] | TirageData[];
+  onEventUpdated?: () => void; // Nouvelle prop pour actualiser les données
+};
+
+// Fonction pour déterminer le statut d'un événement
+const getEventStatus = (startDate: string, endDate: string) => {
+  const now = new Date();
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  if (now >= start && now <= end) {
+    return "en_cours";
+  } else if (now < start) {
+    return "a_venir";
+  } else {
+    return "passe";
+  }
 };
 
 export default function CustomTable({
@@ -304,6 +314,7 @@ export default function CustomTable({
   tableType = "tirage",
   pageType,
   rows,
+  onEventUpdated, // Nouvelle prop
 }: Props) {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(30);
@@ -320,6 +331,7 @@ export default function CustomTable({
     date: dateColumns,
     tirage_s: tirageColumns,
   };
+  
   const rowMap = {
     history: rows,
     tour: rows,
@@ -334,16 +346,20 @@ export default function CustomTable({
     setRowsPerPage(+event.target.value);
     setPage(0);
   };
+  
   const defaulColumns = columnMap[tableType];
   const defaultRows = rowMap[tableType];
+  
   const [openRows, setOpenRows] = React.useState<boolean[]>(
     Array(defaultRows.length).fill(false)
   );
+  
   const handleCollapseToggle = (index: number) => {
     const updatedOpenRows = [...openRows];
     updatedOpenRows[index] = !updatedOpenRows[index];
     setOpenRows(updatedOpenRows);
   };
+  
   const handleToggle = (index: number) => {
     setOpenRows((prev) =>
       prev.map((isOpen, i) => (i === index ? !isOpen : isOpen))
@@ -381,13 +397,29 @@ export default function CustomTable({
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, index) => {
                   const isLastRow = index === rowsPerPage - 1;
+                  const isCurrentEvent = tableType === "tour" && 
+                    getEventStatus(row.date, row.endDate || row.date) === "en_cours";
+                  
                   return (
-                    <React.Fragment key={index}>
-                      <TableRow hover role="checkbox" tabIndex={-1}>
+                    <React.Fragment key={row.id || index}>
+                      <TableRow 
+                        hover 
+                        role="checkbox" 
+                        tabIndex={-1}
+                        sx={{
+                          // Style pour les événements en cours
+                          ...(isCurrentEvent && {
+                            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                            borderLeft: '4px solid #ff0000',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 0, 0, 0.15)',
+                            }
+                          })
+                        }}
+                      >
                         {defaulColumns.map((column) => {
                           const value = row[column.id as keyof typeof row];
-                          const statusValue =
-                            column.id === "statut" ? value : "";
+                          
                           return (
                             <TableCell
                               style={{
@@ -400,8 +432,18 @@ export default function CustomTable({
                               key={column.id}
                               align="center"
                             >
-                              {column.id === "actions" &&
-                              tableType !== "tirage_s" ? (
+                              {/* Gestion des différents types de cellules */}
+                              {column.id === "actions" && (tableType === "tour" || tableType === "date") ? (
+                                // Nouveaux boutons pour tour et date
+                                <NewActionButtons
+                                  eventData={row as DateData}
+                                  onEventUpdated={onEventUpdated || (() => {})}
+                                  onToggleDetails={() => handleCollapseToggle(index)}
+                                  tableType={tableType}
+                                  pageType={pageType}
+                                />
+                              ) : column.id === "actions" && tableType !== "tirage_s" ? (
+                                // Anciens boutons pour les autres types
                                 <ActionsButton
                                   tableType={tableType}
                                   pageType={pageType}
@@ -415,9 +457,10 @@ export default function CustomTable({
                               ) : column.format && typeof value === "number" ? (
                                 column.format(value)
                               ) : column.id === "statut" ? (
-                                <StatusDesign value={value} />
-                              ) : column.id === "actions" &&
-                                tableType === "tirage_s" ? (
+                                <>
+                                  <StatusDesign value={value} />
+                                </>
+                              ) : column.id === "actions" && tableType === "tirage_s" ? (
                                 <TirageDialog id={row.id} statut={row.statut} />
                               ) : column.formatDate && column.id === "date" ? (
                                 column.formatDate(value?.toString())
@@ -428,19 +471,8 @@ export default function CustomTable({
                           );
                         })}
                       </TableRow>
-                      {/* {tableType === "tirage_s" && (
-                        <TableRow>
-                          <TableCell colSpan={1000} sx={{ padding: "0" }}>
-                            <Collapse
-                              in={openRows[index]}
-                              timeout="auto"
-                              unmountOnExit
-                            >
-                              <SubTableContent data={row} />
-                            </Collapse>
-                          </TableCell>
-                        </TableRow>
-                      )} */}
+                      
+                      {/* Collapse pour les détails */}
                       {tableType === "tour" && (
                         <TableRow>
                           <TableCell colSpan={1000} sx={{ padding: "0" }}>
