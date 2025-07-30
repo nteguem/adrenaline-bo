@@ -16,7 +16,7 @@ import StatusDesign from "./StatusDesign";
 import styles from "@/app/ui/dashboard/customTable/customTable.module.css";
 import SubTableContent from "./SubTableContent";
 import TirageDialog from "./CreateTirageDialog";
-import NewActionButtons from "./NewActionButtons"; // Import du nouveau composant
+import NewActionButtons from "./NewActionButtons"; 
 
 interface Column {
   id: "date" | "ville" | "participants" | "actions";
