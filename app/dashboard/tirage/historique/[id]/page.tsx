@@ -17,23 +17,29 @@ interface ParticipantsData {
   prenom: string;
   email: string;
   phone: string;
+  dateNaissance: string; // ← AJOUTÉ
   ticketInfo: string;
   ticketUrl: string;
-  placement:[string];
+  placement: any; // Changé de [string] à any
   gagnants: number;
 }
+
 interface VainqueursData {
   nom_participant: string;
   prenom_participant: string;
   email: string;
   ticketInfo: string;
-  placement:[string];
-  phone:string;
   ticketUrl: string;
   rangs: number;
+  participant: { // ← STRUCTURE IMBRIQUÉE DES VAINQUEURS
+    phone: string;
+    dateNaissance: string;
+    placement: any;
+    ticketUrl: string;
+    textInfo: string;
+  };
 }
 
-// The same SWR pattern you already know
 export default function Page() {
   const [participants, setParticipants] = useState<ParticipantsData[]>([]);
   const [event, setEvent] = useState<any>(null);
@@ -66,13 +72,11 @@ export default function Page() {
 
     const day = String(date.getUTCDate()).padStart(2, "0");
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const year = date.getUTCFullYear(); // Get full year
+    const year = date.getUTCFullYear();
 
-    // Extract hours and minutes
     const hours = String(date.getUTCHours()).padStart(2, "0");
     const minutes = String(date.getUTCMinutes()).padStart(2, "0");
 
-    // Format to dd.mm.yyyy hh:mm
     const returnDate = `${day}/${month}/${year} à ${hours}:${minutes}`;
 
     return returnDate;
@@ -83,33 +87,40 @@ export default function Page() {
       const gotdata = data?.data;
       if (gotdata) {
         if (activeTab === "participants") {
+          // ← TAB VAINQUEURS : Structure avec participant imbriqué
           const tirageDate = customdateFormat(data?.data?.tirage?.dateTirage);
           setTiragedateInfo(tirageDate);
+          
           const mappedVainqueurs = data?.data?.vainqueurs.map(
-            (participant: VainqueursData) => ({
-              nom: participant.nom_participant,
-              prenom: participant.prenom_participant,
-              phone:participant.phone,
-              placement:participant.placement,
-              email: participant.email,
-              ticketUrl: participant.ticketUrl
-                ? participant.ticketUrl
-                : participant.ticketInfo,
+            (vainqueur: VainqueursData) => ({
+              id: vainqueur.id || `vainqueur-${Math.random()}`, // Générer un ID si manquant
+              nom: vainqueur.nom_participant,
+              prenom: vainqueur.prenom_participant,
+              email: vainqueur.email,
+              // ← ACCÈS AUX DONNÉES VIA participant.participant.*
+              phone: vainqueur.participant?.phone || "N/A",
+              dateNaissance: vainqueur.participant?.dateNaissance || "",
+              placement: vainqueur.participant?.placement || {},
+              ticketUrl: vainqueur.participant?.ticketUrl || vainqueur.ticketUrl || "",
+              textInfo: vainqueur.participant?.textInfo || vainqueur.ticketInfo || "",
               gagnants: 0,
             })
           );
           setParticipants(mappedVainqueurs);
+          
         } else if (activeTab === "all_participants") {
+          // ← TAB PARTICIPANTS : Structure normale
           const mappedParticipants = data?.data?.participants.map(
             (participant: ParticipantsData) => ({
+              id: participant.id || `participant-${Math.random()}`, // Générer un ID si manquant
               nom: participant.nom,
               prenom: participant.prenom,
-              placement:participant.placement,
-              phone:participant.phone,
               email: participant.email,
-              ticketUrl: participant.ticketUrl
-                ? participant.ticketUrl
-                : participant.ticketInfo,
+              phone: participant.phone || "N/A",
+              dateNaissance: participant.dateNaissance || "",
+              placement: participant.placement || {},
+              ticketUrl: participant.ticketUrl || "",
+              textInfo: participant.textInfo || "",
               gagnants: 0,
             })
           );
@@ -136,10 +147,10 @@ export default function Page() {
     } - ${event?.city} (${
       event?.eventDate ? new Date(event?.eventDate).toLocaleDateString() : ""
     })\n\n`;
-    csvContent += "Nom,Prénom, Email, N° Billet\n";
+    csvContent += "Nom,Prénom,Email,Téléphone,Date de naissance,N° Billet\n";
 
-    participants.forEach((section: ParticipantsData) => {
-      csvContent += `"${section.nom}","${section.prenom}","${section.email},"${section.ticketUrl}"\n`;
+    participants.forEach((participant: ParticipantsData) => {
+      csvContent += `"${participant.nom}","${participant.prenom}","${participant.email}","${participant.phone}","${participant.dateNaissance ? new Date(participant.dateNaissance).toLocaleDateString() : 'N/A'}","${participant.ticketUrl}"\n`;
     });
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -151,6 +162,7 @@ export default function Page() {
     link.click();
     document.body.removeChild(link);
   };
+
   if (error) return <div>Error loading participants</div>;
 
   return (

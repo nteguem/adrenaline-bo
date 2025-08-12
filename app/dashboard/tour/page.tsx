@@ -34,7 +34,7 @@ interface Column {
   label: string;
 }
 
-type EventFilter = "upcoming" | "past" | "all";
+type EventFilter = "upcoming" | "current" | "past" | "all";
 
 export default function Page() {
   const [dates, setDates] = useState<DateRow[]>([]);
@@ -103,11 +103,13 @@ export default function Page() {
     
     switch (filter) {
       case "upcoming":
-        return upcomingAndCurrent; // En cours + à venir mélangés
+        return upcoming; // Seulement les à venir
+      case "current":
+        return current; // Seulement les en cours
       case "past":
-        return past;
+        return past; // Seulement les passés
       case "all":
-        return [...upcomingAndCurrent, ...past]; // Tout : (en cours + à venir) puis passés
+        return [...current, ...upcoming, ...past]; // Tout dans l'ordre logique
       default:
         return events;
     }
@@ -117,7 +119,8 @@ export default function Page() {
   const getEventCounts = (events: DateRow[]) => {
     const { current, upcoming, past } = classifyAndSortEvents(events);
     return {
-      upcoming: current.length + upcoming.length, // En cours + à venir
+      upcoming: upcoming.length, // Seulement à venir
+      current: current.length, // Seulement en cours
       past: past.length,
       total: events.length
     };
@@ -141,16 +144,23 @@ export default function Page() {
               status: string;
               placement?: string[];
               actions: string;
-            }) => ({
-              id: event.id,
-              date: event.eventDate,
-              endDate: event.endDate,
-              ville: event.city,
-              salle: event.venue,
-              statut: currentDayComparator(event.eventDate),
-              participants: 0,
-              placement: event.placement || [],
-            })
+            }) => {
+              // Utiliser la logique unifiée basée sur les dates
+              const eventStatus = getEventStatus(event.eventDate, event.endDate);
+              const displayStatus = eventStatus === "en_cours" ? "En cours" : 
+                                  eventStatus === "a_venir" ? "À venir" : "Passé";
+              
+              return {
+                id: event.id,
+                date: event.eventDate,
+                endDate: event.endDate,
+                ville: event.city,
+                salle: event.venue,
+                statut: displayStatus, // ← Utilise le statut calculé, pas l'API
+                participants: 0,
+                placement: event.placement || [],
+              };
+            }
           )
           .filter(
             (event: {
@@ -206,11 +216,24 @@ export default function Page() {
     { id: "action", minWidth: 10, label: "Action" },
   ];
 
+  // Fonction mise à jour pour afficher date + heure
+  const customDateTimeFormat = (passedDate: string) => {
+    const date = new Date(passedDate);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    
+    return `${day}.${month}.${year} ${hours}:${minutes}`;
+  };
+
+  // Fonction pour afficher seulement la date (pour le résumé)
   const customDateOnlyFormat = (passedDate: string) => {
     const date = new Date(passedDate);
-    const day = String(date.getUTCDate()).padStart(2, "0");
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const year = date.getUTCFullYear();
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
     const returnDate = `${day}.${month}.${year}`;
     return returnDate;
   };
@@ -254,16 +277,23 @@ export default function Page() {
             status: string;
             placement?: string[];
             actions: string;
-          }) => ({
-            id: event.id,
-            date: event.eventDate,
-            endDate: event.endDate,
-            ville: event.city,
-            salle: event.venue,
-            statut: currentDayComparator(event.eventDate),
-            participants: 0,
-            placement: event.placement || [],
-          })
+          }) => {
+            // Utiliser la logique unifiée basée sur les dates
+            const eventStatus = getEventStatus(event.eventDate, event.endDate);
+            const displayStatus = eventStatus === "en_cours" ? "En cours" : 
+                                eventStatus === "a_venir" ? "À venir" : "Passé";
+            
+            return {
+              id: event.id,
+              date: event.eventDate,
+              endDate: event.endDate,
+              ville: event.city,
+              salle: event.venue,
+              statut: displayStatus, // ← Utilise le statut calculé, pas l'API
+              participants: 0,
+              placement: event.placement || [],
+            };
+          }
         )
         .filter(
           (event: {
@@ -376,12 +406,6 @@ export default function Page() {
             <p className={styles.resumeSmallText}>
               Nombre de dates prévues: {dates.length > 0 ? dates.length : 0}
             </p>
-            <p className={styles.resumeSmallText}>
-              Salles:{" "}
-              {dates.length > 0
-                ? dates.map((event) => event.salle).join(", ")
-                : ""}
-            </p>
           </div>
           <div className={styles.resumeRightSide}>
             <span className={styles.resumeIsActif}>Actif</span>
@@ -401,6 +425,19 @@ export default function Page() {
               border: activeFilter === "upcoming" ? "1px solid #4caf50" : "1px solid #666",
               '&:hover': {
                 backgroundColor: activeFilter === "upcoming" ? "#45a049" : "rgba(76, 175, 80, 0.1)"
+              }
+            }}
+          />
+          <Chip
+            label={`En cours (${eventCounts.current})`}
+            onClick={() => setActiveFilter("current")}
+            variant={activeFilter === "current" ? "filled" : "outlined"}
+            sx={{
+              backgroundColor: activeFilter === "current" ? "#ff9800" : "transparent",
+              color: activeFilter === "current" ? "white" : "#fff",
+              border: activeFilter === "current" ? "1px solid #ff9800" : "1px solid #666",
+              '&:hover': {
+                backgroundColor: activeFilter === "current" ? "#f57c00" : "rgba(255, 152, 0, 0.1)"
               }
             }}
           />

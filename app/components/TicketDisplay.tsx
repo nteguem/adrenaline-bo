@@ -11,7 +11,7 @@ import {
   Close as CloseIcon,
   Description as DocumentIcon,
   BrokenImage as NoLinkIcon,
-  Image as ImageIcon,
+  OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material';
 
 interface TicketDisplayProps {
@@ -37,8 +37,20 @@ const TicketDisplay: React.FC<TicketDisplayProps> = ({ ticketUrl }) => {
   const fileType = isValidUrl ? getFileType(ticketUrl) : 'none';
 
   const handleClick = () => {
+    console.log("Clic détecté sur:", ticketUrl, "Type:", fileType); // Debug
+    
     if (isValidUrl) {
-      setIsModalOpen(true);
+      if (fileType === 'document') {
+        // Pour les PDFs : ouvrir dans un nouvel onglet
+        console.log("Ouverture PDF dans nouvel onglet");
+        window.open(ticketUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        // Pour les images : ouvrir la modal
+        console.log("Ouverture image en modal");
+        setIsModalOpen(true);
+      }
+    } else {
+      console.log("URL invalide:", ticketUrl);
     }
   };
 
@@ -109,7 +121,7 @@ const TicketDisplay: React.FC<TicketDisplayProps> = ({ ticketUrl }) => {
       );
     }
 
-    // Pour les documents
+    // Pour les documents (PDFs)
     return (
       <Box
         onClick={handleClick}
@@ -123,6 +135,7 @@ const TicketDisplay: React.FC<TicketDisplayProps> = ({ ticketUrl }) => {
           borderRadius: 1,
           cursor: 'pointer',
           border: '1px solid #ddd',
+          position: 'relative',
           '&:hover': {
             backgroundColor: '#e0e0e0',
             transform: 'scale(1.05)',
@@ -130,14 +143,23 @@ const TicketDisplay: React.FC<TicketDisplayProps> = ({ ticketUrl }) => {
           },
         }}
       >
-        <DocumentIcon sx={{ color: '#666', fontSize: 24 }} />
+        <DocumentIcon sx={{ color: '#666', fontSize: 20 }} />
+        <OpenInNewIcon 
+          sx={{ 
+            color: '#666', 
+            fontSize: 12,
+            position: 'absolute',
+            top: 2,
+            right: 2
+          }} 
+        />
       </Box>
     );
   };
 
-  // Rendu de la modale
+  // Rendu de la modale (seulement pour les images maintenant)
   const renderModal = () => {
-    if (!isValidUrl) return null;
+    if (!isValidUrl || fileType !== 'image') return null;
 
     return (
       <Dialog
@@ -163,7 +185,7 @@ const TicketDisplay: React.FC<TicketDisplayProps> = ({ ticketUrl }) => {
           }}
         >
           <Typography variant="h6">
-            {fileType === 'image' ? 'Aperçu du ticket' : 'Document ticket'}
+            Aperçu du ticket
           </Typography>
           <IconButton
             onClick={handleClose}
@@ -183,56 +205,32 @@ const TicketDisplay: React.FC<TicketDisplayProps> = ({ ticketUrl }) => {
             minHeight: '400px',
           }}
         >
-          {fileType === 'image' ? (
-            <Box
-              sx={{
-                width: '100%',
-                height: 'auto',
-                maxHeight: '70vh',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                padding: 2,
+          <Box
+            sx={{
+              width: '100%',
+              height: 'auto',
+              maxHeight: '70vh',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 2,
+            }}
+          >
+            <img
+              src={ticketUrl}
+              alt="Ticket complet"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+                borderRadius: '8px',
               }}
-            >
-              <img
-                src={ticketUrl}
-                alt="Ticket complet"
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '100%',
-                  objectFit: 'contain',
-                  borderRadius: '8px',
-                }}
-                onError={() => {
-                  // Si l'image ne charge pas en grand format non plus
-                  setIsModalOpen(false);
-                }}
-              />
-            </Box>
-          ) : (
-            <Box
-              sx={{
-                width: '100%',
-                height: '70vh',
-                padding: 1,
+              onError={() => {
+                // Si l'image ne charge pas en grand format non plus
+                setIsModalOpen(false);
               }}
-            >
-              <iframe
-                src={ticketUrl}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  borderRadius: '8px',
-                }}
-                title="Document ticket"
-                onError={() => {
-                  console.error('Erreur lors du chargement du document');
-                }}
-              />
-            </Box>
-          )}
+            />
+          </Box>
         </DialogContent>
       </Dialog>
     );

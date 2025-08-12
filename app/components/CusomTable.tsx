@@ -135,13 +135,99 @@ interface TirageData {
   actions: string;
 }
 
-// Configuration des colonnes (inchangée)
+// Interface mise à jour pour les props
+type Props = {
+  title: string;
+  tableType: "tirage" | "history" | "tour" | "date" | "tirage_s";
+  pageType: "standard" | "tour" | "date" | "tirage_s";
+  rows: DateData[] | HistoryData[] | TourData[] | TirageData[];
+  onEventUpdated?: () => void;
+};
+
+// Fonction pour formater date + heure
+const formatDateTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
+};
+
+// Composant de statut simple qui gère nos statuts calculés
+const SimpleStatusDisplay = ({ status }: { status: string }) => {
+  const getStatusStyle = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "en cours":
+        return {
+          backgroundColor: "#4caf50",
+          color: "white",
+          padding: "4px 12px",
+          borderRadius: "12px",
+          fontSize: "12px",
+          fontWeight: "bold"
+        };
+      case "à venir":
+        return {
+          backgroundColor: "#2196f3", 
+          color: "white",
+          padding: "4px 12px",
+          borderRadius: "12px",
+          fontSize: "12px",
+          fontWeight: "bold"
+        };
+      case "passé":
+        return {
+          backgroundColor: "#f44336",
+          color: "white", 
+          padding: "4px 12px",
+          borderRadius: "12px",
+          fontSize: "12px",
+          fontWeight: "bold"
+        };
+      default:
+        return {
+          backgroundColor: "#757575",
+          color: "white",
+          padding: "4px 12px", 
+          borderRadius: "12px",
+          fontSize: "12px",
+          fontWeight: "bold"
+        };
+    }
+  };
+
+  return (
+    <span style={getStatusStyle(status)}>
+      {status}
+    </span>
+  );
+};
+
+// Fonction pour déterminer le statut d'un événement
+const getEventStatus = (startDate: string, endDate: string) => {
+  const now = new Date();
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  if (now >= start && now <= end) {
+    return "en_cours";
+  } else if (now < start) {
+    return "a_venir";
+  } else {
+    return "passe";
+  }
+};
+
+// Configuration des colonnes avec formatage date+heure
 const tirageColumns: readonly TirageColumn[] = [
   {
     id: "date",
     label: "Date concert",
     minWidth: 100,
-    formatDate: (value: string) => new Date(value).toLocaleDateString(),
+    formatDate: formatDateTime,
   },
   { id: "ville", label: "Ville", minWidth: 100 },
   {
@@ -163,7 +249,7 @@ const dateColumns: readonly DateColumn[] = [
     id: "date",
     label: "Date",
     minWidth: 100,
-    formatDate: (value: string) => new Date(value).toLocaleDateString(),
+    formatDate: formatDateTime,
   },
   { id: "ville", label: "Ville", minWidth: 100 },
   { id: "salle", label: "Salle", minWidth: 100 },
@@ -199,7 +285,7 @@ const tourColumns: readonly TourColumn[] = [
     id: "date",
     label: "Date",
     minWidth: 100,
-    formatDate: (value: string) => new Date(value).toLocaleDateString(),
+    formatDate: formatDateTime,
   },
   { id: "ville", label: "Ville", minWidth: 100 },
   { id: "salle", label: "Salle", minWidth: 100 },
@@ -235,7 +321,7 @@ const columns: readonly Column[] = [
     id: "date",
     label: "Date",
     minWidth: 100,
-    formatDate: (value: string) => new Date(value).toLocaleDateString(),
+    formatDate: formatDateTime,
   },
   { id: "ville", label: "Ville", minWidth: 100 },
   {
@@ -259,7 +345,7 @@ const historyColumns: readonly HistoryColumn[] = [
     id: "date",
     label: "Date",
     minWidth: 100,
-    formatDate: (value: string) => new Date(value).toLocaleDateString(),
+    formatDate: formatDateTime,
   },
   { id: "ville", label: "Ville", minWidth: 100 },
   {
@@ -285,36 +371,12 @@ const historyColumns: readonly HistoryColumn[] = [
   },
 ];
 
-// Interface mise à jour pour les props
-type Props = {
-  title: string;
-  tableType: "tirage" | "history" | "tour" | "date" | "tirage_s";
-  pageType: "standard" | "tour" | "date" | "tirage_s";
-  rows: DateData[] | HistoryData[] | TourData[] | TirageData[];
-  onEventUpdated?: () => void; // Nouvelle prop pour actualiser les données
-};
-
-// Fonction pour déterminer le statut d'un événement
-const getEventStatus = (startDate: string, endDate: string) => {
-  const now = new Date();
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  
-  if (now >= start && now <= end) {
-    return "en_cours";
-  } else if (now < start) {
-    return "a_venir";
-  } else {
-    return "passe";
-  }
-};
-
 export default function CustomTable({
   title,
   tableType = "tirage",
   pageType,
   rows,
-  onEventUpdated, // Nouvelle prop
+  onEventUpdated,
 }: Props) {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(30);
@@ -457,9 +519,7 @@ export default function CustomTable({
                               ) : column.format && typeof value === "number" ? (
                                 column.format(value)
                               ) : column.id === "statut" ? (
-                                <>
-                                  <StatusDesign value={value} />
-                                </>
+                                <SimpleStatusDisplay status={value?.toString() || "Inconnu"} />
                               ) : column.id === "actions" && tableType === "tirage_s" ? (
                                 <TirageDialog id={row.id} statut={row.statut} />
                               ) : column.formatDate && column.id === "date" ? (
