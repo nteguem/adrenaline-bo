@@ -36,6 +36,20 @@ interface Column {
 
 type EventFilter = "upcoming" | "current" | "past" | "all";
 
+// Interface pour les données de l'API
+interface APIEvent {
+  id: string;
+  eventDate: string;
+  endDate: string;
+  city: string;
+  venue: string;
+  status: string;
+  placement?: string[];
+  actions: string;
+  _count?: { participants: number };
+  totalParticipants?: number;
+}
+
 export default function Page() {
   const [dates, setDates] = useState<DateRow[]>([]);
   const [filteredDates, setFilteredDates] = useState<DateRow[]>([]);
@@ -126,6 +140,27 @@ export default function Page() {
     };
   };
 
+  // Fonction pour transformer les données de l'API en DateRow
+  const transformAPIEventToDateRow = (event: APIEvent): DateRow => {
+    const eventStatus = getEventStatus(event.eventDate, event.endDate);
+    const displayStatus = eventStatus === "en_cours" ? "En cours" : 
+                        eventStatus === "a_venir" ? "À venir" : "Passé";
+    
+    return {
+      id: event.id,
+      date: event.eventDate,
+      endDate: event.endDate,
+      ville: event.city,
+      salle: event.venue,
+      statut: displayStatus,
+      // Utiliser les données de participants de l'API
+      participants: event._count?.participants || event.totalParticipants || 0,
+      placement: event.placement || [],
+      tirage: "", // Vous pourrez ajouter cette logique selon vos besoins
+      actions: ""
+    };
+  };
+
   // Fonction pour actualiser les données (à passer aux composants enfants)
   const refreshData = async () => {
     try {
@@ -134,51 +169,16 @@ export default function Page() {
       if (updatedData) {
         const eventSet = new Set();
         const uniqueDates: DateRow[] = updatedData.data.events
-          .map(
-            (event: {
-              id: string;
-              eventDate: string;
-              endDate: string;
-              city: string;
-              venue: string;
-              status: string;
-              placement?: string[];
-              actions: string;
-            }) => {
-              // Utiliser la logique unifiée basée sur les dates
-              const eventStatus = getEventStatus(event.eventDate, event.endDate);
-              const displayStatus = eventStatus === "en_cours" ? "En cours" : 
-                                  eventStatus === "a_venir" ? "À venir" : "Passé";
-              
-              return {
-                id: event.id,
-                date: event.eventDate,
-                endDate: event.endDate,
-                ville: event.city,
-                salle: event.venue,
-                statut: displayStatus, // ← Utilise le statut calculé, pas l'API
-                participants: 0,
-                placement: event.placement || [],
-              };
+          .map((event: APIEvent) => transformAPIEventToDateRow(event))
+          .filter((event: DateRow) => {
+            currentDateCalculator(event.date, event.id);
+            if (eventSet.has(event.id)) {
+              return false;
+            } else {
+              eventSet.add(event.id);
+              return true;
             }
-          )
-          .filter(
-            (event: {
-              id: string;
-              date: string;
-              endDate: string;
-              ville: string;
-              salle: string;
-            }) => {
-              currentDateCalculator(event.date, event.id);
-              if (eventSet.has(event.id)) {
-                return false;
-              } else {
-                eventSet.add(event.id);
-                return true;
-              }
-            }
-          );
+          });
 
         setDates(uniqueDates);
       }
@@ -267,51 +267,16 @@ export default function Page() {
     if (data) {
       const eventSet = new Set();
       const uniqueDates: DateRow[] = data.data.events
-        .map(
-          (event: {
-            id: string;
-            eventDate: string;
-            endDate: string;
-            city: string;
-            venue: string;
-            status: string;
-            placement?: string[];
-            actions: string;
-          }) => {
-            // Utiliser la logique unifiée basée sur les dates
-            const eventStatus = getEventStatus(event.eventDate, event.endDate);
-            const displayStatus = eventStatus === "en_cours" ? "En cours" : 
-                                eventStatus === "a_venir" ? "À venir" : "Passé";
-            
-            return {
-              id: event.id,
-              date: event.eventDate,
-              endDate: event.endDate,
-              ville: event.city,
-              salle: event.venue,
-              statut: displayStatus, // ← Utilise le statut calculé, pas l'API
-              participants: 0,
-              placement: event.placement || [],
-            };
+        .map((event: APIEvent) => transformAPIEventToDateRow(event))
+        .filter((event: DateRow) => {
+          currentDateCalculator(event.date, event.id);
+          if (eventSet.has(event.id)) {
+            return false;
+          } else {
+            eventSet.add(event.id);
+            return true;
           }
-        )
-        .filter(
-          (event: {
-            id: string;
-            date: string;
-            endDate: string;
-            ville: string;
-            salle: string;
-          }) => {
-            currentDateCalculator(event.date, event.id);
-            if (eventSet.has(event.id)) {
-              return false;
-            } else {
-              eventSet.add(event.id);
-              return true;
-            }
-          }
-        );
+        });
 
       setDates(uniqueDates);
       setLoading(false);
@@ -324,26 +289,36 @@ export default function Page() {
     setFilteredDates(filtered);
   }, [dates, activeFilter]);
   
+  // Mise à jour en temps réel des participants (optionnel)
   useEffect(() => {
     if (actifDate) {
       const customFetcherParticipants = async () => {
-        const response = await fetcherParticipantsByEvent(
-          actifDate,
-          "/api/participants_bo/event",
-          token
-        );
-        setDates((prevDates) =>
-          prevDates.map((event) => {
-            return {
-              ...event,
-              participants:
-                event.id === actifDate
-                  ? response.data?.participants.length
-                  : event.participants,
-            };
-          })
-        );
+        try {
+          const response = await fetcherParticipantsByEvent(
+            actifDate,
+            "/api/participants_bo/event",
+            token
+          );
+          
+          // Mettre à jour seulement si on a une réponse différente
+          const newParticipantCount = response.data?.participants.length || 0;
+          
+          setDates((prevDates) =>
+            prevDates.map((event) => {
+              if (event.id === actifDate && event.participants !== newParticipantCount) {
+                return {
+                  ...event,
+                  participants: newParticipantCount,
+                };
+              }
+              return event;
+            })
+          );
+        } catch (error) {
+          console.error("Erreur lors de la récupération des participants:", error);
+        }
       };
+      
       customFetcherParticipants();
       setNextEvent(getNextElementById(dates, actifDate));
     }
@@ -401,7 +376,7 @@ export default function Page() {
               {dates.length > 0 &&
                 `Dates: ${customDateOnlyFormat(
                   dates[0].date
-                )} - ${customDateOnlyFormat(dates[dates.length - 1].date)}`}
+                )} - ${customDateOnlyFormat(dates[dates.length - 1].endDate)}`}
             </p>
             <p className={styles.resumeSmallText}>
               Nombre de dates prévues: {dates.length > 0 ? dates.length : 0}
