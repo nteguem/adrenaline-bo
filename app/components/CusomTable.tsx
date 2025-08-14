@@ -379,7 +379,7 @@ export default function CustomTable({
   onEventUpdated,
 }: Props) {
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(30);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [open, setOpen] = React.useState(false);
 
   const handleChangePage = (event: unknown, newPage: number) => {

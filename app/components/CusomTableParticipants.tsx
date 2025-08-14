@@ -220,7 +220,7 @@ export default function CustomTableParticipants({
   rows = [], // Garder le nom "rows"
 }: Props) {
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(3);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
