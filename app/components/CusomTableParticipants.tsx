@@ -153,8 +153,6 @@ const formatPlacement = (placement: any): React.ReactNode => {
     return isValid;
   });
   
-  console.log("Entrées finales:", entries);
-
   if (entries.length === 0) {
     return <Typography variant="body2" style={{ color: '#888' }}>Vraiment aucune information</Typography>;
   }

@@ -195,10 +195,10 @@ export default function Page() {
                 - {event?.city} - {event?.venue}
               </p>
             </div>
-            <div className="flex-1">
-              <p className="text-secondary">Participants</p>
-              <p>{participants && participants.length} inscrits</p>
-            </div>
+          <div className="flex-1">
+  <p className="text-secondary">Participants</p>
+  <p>{event?.totalParticipants || event?._count?.participants || (participants && participants.length) || 0} inscrits</p>
+</div>
             <div className="flex-1">
               <p className="text-secondary">Tirage effectué le:</p>
               <p>{tiragedateInfo}</p>
