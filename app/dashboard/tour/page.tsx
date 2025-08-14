@@ -148,7 +148,7 @@ export default function Page() {
     
     return {
       id: event.id,
-      date: event.eventDate,
+      date: event.endDate,
       endDate: event.endDate,
       ville: event.city,
       salle: event.venue,
