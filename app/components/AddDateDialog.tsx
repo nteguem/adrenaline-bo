@@ -106,7 +106,8 @@ export default function AddDateDialog({
     if (mode === "edit" && eventData) {
       const { date: startDateObj, time: startTimeStr } = extractDateAndTime(eventData.date);
       const { date: endDateObj, time: endTimeStr } = extractDateAndTime(eventData.endDate);
-      
+          console.log("DEBUG - eventData:", eventData.date, eventData.endDate);
+
       setStartDate(startDateObj);
       setStartTime(startTimeStr);
       setEndDate(endDateObj);

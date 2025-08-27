@@ -140,7 +140,7 @@ export default function Page() {
     };
   };
 
-  // Fonction pour transformer les données de l'API en DateRow
+  // Fonction pour transformer les données de l'API en DateRow - CORRIGÉE
   const transformAPIEventToDateRow = (event: APIEvent): DateRow => {
     const eventStatus = getEventStatus(event.eventDate, event.endDate);
     const displayStatus = eventStatus === "en_cours" ? "En cours" : 
@@ -148,7 +148,7 @@ export default function Page() {
     
     return {
       id: event.id,
-      date: event.endDate,
+      date: event.eventDate,  // CORRECTION : utiliser eventDate au lieu de endDate
       endDate: event.endDate,
       ville: event.city,
       salle: event.venue,
