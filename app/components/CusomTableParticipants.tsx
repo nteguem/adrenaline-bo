@@ -16,6 +16,7 @@ import StatusDesign from "./StatusDesign";
 import TicketDisplay from "./TicketDisplay";
 import styles from "@/app/ui/dashboard/customTable/customTable.module.css";
 import SubTableContent from "./SubTableContent";
+import TableLoader from "@/app/helpers/TableLoader";
 
 interface GeneralColumn {
   id: "nom" | "prenom" | "email" | "phone" | "dateNaissance" | "ticketUrl" | "placement";
@@ -211,6 +212,7 @@ type Props = {
   tableType: "general" | "history";
   pageType: "standard" | "tour";
   rows: any[]; // Garder le nom "rows" comme dans votre code original
+  isLoading?: boolean;
 };
 
 export default function CustomTableParticipants({
@@ -218,6 +220,7 @@ export default function CustomTableParticipants({
   tableType = "general",
   pageType,
   rows = [], // Garder le nom "rows"
+  isLoading = false,
 }: Props) {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -286,7 +289,22 @@ export default function CustomTableParticipants({
                 ))}
               </TableRow>
             </TableHead>
-            {transformedRows.length > 0 ? (
+            {isLoading ? (
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={defaultColumns.length} style={{ padding: 0 }}>
+                    <TableLoader
+                      columns={defaultColumns.map((c: any) => ({
+                        id: c.id,
+                        minWidth: c.minWidth || 100,
+                        label: c.label,
+                      }))}
+                      rowsPerPage={rowsPerPage}
+                    />
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            ) : transformedRows.length > 0 ? (
               <TableBody>
                 {transformedRows
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
