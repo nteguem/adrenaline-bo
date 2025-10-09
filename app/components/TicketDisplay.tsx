@@ -20,38 +20,20 @@ interface TicketDisplayProps {
 
 const TicketDisplay: React.FC<TicketDisplayProps> = ({ ticketUrl }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   
   // Vérifier si l'URL est valide
-  const isValidUrl = ticketUrl && ticketUrl.trim() !== '';
-  
-  // Déterminer le type de fichier
-  const getFileType = (url: string): 'image' | 'document' => {
-    if (!url) return 'document';
-    
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
-    const lowercaseUrl = url.toLowerCase();
-    
-    return imageExtensions.some(ext => lowercaseUrl.includes(ext)) ? 'image' : 'document';
-  };
-
-  const fileType = isValidUrl ? getFileType(ticketUrl) : 'none';
+  const isValidUrl = !!ticketUrl && ticketUrl.trim() !== '';
 
   const handleClick = () => {
-    console.log("Clic détecté sur:", ticketUrl, "Type:", fileType); // Debug
-    
-    if (isValidUrl) {
-      if (fileType === 'document') {
-        // Pour les PDFs : ouvrir dans un nouvel onglet
-        console.log("Ouverture PDF dans nouvel onglet");
-        window.open(ticketUrl, '_blank', 'noopener,noreferrer');
-      } else {
-        // Pour les images : ouvrir la modal
-        console.log("Ouverture image en modal");
-        setIsModalOpen(true);
-      }
-    } else {
-      console.log("URL invalide:", ticketUrl);
+    if (!isValidUrl) return;
+    // Si l'image a échoué, ouvrir directement dans un nouvel onglet (PDF/Autre)
+    if (imageFailed) {
+      window.open(ticketUrl, '_blank', 'noopener,noreferrer');
+      return;
     }
+    // Sinon, afficher en modal
+    setIsModalOpen(true);
   };
 
   const handleClose = () => {
@@ -79,23 +61,29 @@ const TicketDisplay: React.FC<TicketDisplayProps> = ({ ticketUrl }) => {
       );
     }
 
-    if (fileType === 'image') {
-      return (
-        <Box
-          onClick={handleClick}
-          sx={{
-            width: 60,
-            height: 40,
-            borderRadius: 1,
-            overflow: 'hidden',
-            cursor: 'pointer',
-            border: '1px solid #ddd',
-            '&:hover': {
-              transform: 'scale(1.05)',
-              transition: 'transform 0.2s',
-            },
-          }}
-        >
+    // Essayer d'afficher l'image d'abord; fallback document si erreur
+    return (
+      <Box
+        onClick={handleClick}
+        sx={{
+          width: 60,
+          height: 40,
+          borderRadius: 1,
+          overflow: 'hidden',
+          cursor: isValidUrl ? 'pointer' : 'default',
+          border: '1px solid #ddd',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          '&:hover': {
+            transform: 'scale(1.05)',
+            transition: 'transform 0.2s',
+          },
+          backgroundColor: imageFailed ? '#f5f5f5' : 'transparent',
+          position: 'relative',
+        }}
+      >
+        {!imageFailed ? (
           <img
             src={ticketUrl}
             alt="Ticket thumbnail"
@@ -104,62 +92,29 @@ const TicketDisplay: React.FC<TicketDisplayProps> = ({ ticketUrl }) => {
               height: '100%',
               objectFit: 'cover',
             }}
-            onError={(e) => {
-              // Si l'image ne charge pas, afficher l'icône document
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-              target.parentElement!.innerHTML = `
-                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: #f5f5f5;">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#666">
-                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                  </svg>
-                </div>
-              `;
-            }}
+            onError={() => setImageFailed(true)}
           />
-        </Box>
-      );
-    }
-
-    // Pour les documents (PDFs)
-    return (
-      <Box
-        onClick={handleClick}
-        sx={{
-          width: 60,
-          height: 40,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#f5f5f5',
-          borderRadius: 1,
-          cursor: 'pointer',
-          border: '1px solid #ddd',
-          position: 'relative',
-          '&:hover': {
-            backgroundColor: '#e0e0e0',
-            transform: 'scale(1.05)',
-            transition: 'all 0.2s',
-          },
-        }}
-      >
-        <DocumentIcon sx={{ color: '#666', fontSize: 20 }} />
-        <OpenInNewIcon 
-          sx={{ 
-            color: '#666', 
-            fontSize: 12,
-            position: 'absolute',
-            top: 2,
-            right: 2
-          }} 
-        />
+        ) : (
+          <>
+            <DocumentIcon sx={{ color: '#666', fontSize: 20 }} />
+            <OpenInNewIcon 
+              sx={{ 
+                color: '#666', 
+                fontSize: 12,
+                position: 'absolute',
+                top: 2,
+                right: 2
+              }} 
+            />
+          </>
+        )}
       </Box>
     );
   };
 
-  // Rendu de la modale (seulement pour les images maintenant)
+  // Rendu de la modale (seulement si l'image a bien chargé)
   const renderModal = () => {
-    if (!isValidUrl || fileType !== 'image') return null;
+    if (!isValidUrl || imageFailed) return null;
 
     return (
       <Dialog
@@ -226,8 +181,8 @@ const TicketDisplay: React.FC<TicketDisplayProps> = ({ ticketUrl }) => {
                 borderRadius: '8px',
               }}
               onError={() => {
-                // Si l'image ne charge pas en grand format non plus
                 setIsModalOpen(false);
+                setImageFailed(true);
               }}
             />
           </Box>
