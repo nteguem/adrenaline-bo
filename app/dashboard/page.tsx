@@ -12,6 +12,7 @@ import {
 import { useCookies } from "../context/userContext";
 import { useEffect } from "react";
 import { currentDayComparator } from "../helpers/statusHelper";
+import TableLoader from "@/app/helpers/TableLoader";
 // import { getSession } from "../lib/lib";
 
 interface DateRow {
@@ -45,6 +46,7 @@ export default function Page() {
   const [totalParticipantEvent, setTotalParticipantEvent] = useState([]);
   const [dates, setDates] = useState<DateRow[]>([]);
   const [datesPassed, setDatesPassed] = useState<HistoryData[]>([]);
+  const [loading, setLoading] = useState(true);
   const cookie = useCookies();
   const token = cookie.cookie;
   const { data, error } = useSWR(
@@ -54,6 +56,7 @@ export default function Page() {
   );
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       if (data) {
         if (data.data?.events) setTotalNumberDates(data.data?.events.length);
         data.data.events.map(async (item: any) => {
@@ -68,7 +71,7 @@ export default function Page() {
                 endDate: item.endDate,
                 ville: item.city,
                 salle: item.venue,
-                participants: 0,
+                participants: item.totalParticipants || item._count?.participants || 0,
                 statut: "en cours",
                 tirage: "",
                 actions: "",
@@ -83,7 +86,7 @@ export default function Page() {
               endDate: item.endDate,
               ville: item.city,
               salle: item.venue,
-              participants: 0,
+              participants: item.totalParticipants || item._count?.participants || 0,
               statut: "passé",
               gagnants: 0,
               actions: 0,
@@ -93,21 +96,6 @@ export default function Page() {
             );
             if (!exists) {
               setDatesPassed((prevDates) => [...prevDates, uniqueDatesPassed]);
-              const response = await fetcherParticipantsByEvent(
-                item.id,
-                "/api/participants_bo/event",
-                token
-              );
-              if (response?.success === true) {
-                const participantCount = response.data.participants.length;
-                setDatesPassed((prevDates) =>
-                  prevDates.map((date) =>
-                    date.id === uniqueDatesPassed.id
-                      ? { ...date, participants: participantCount }
-                      : date
-                  )
-                );
-              }
               setDatesPassed((prevDates) =>
                 [...prevDates].sort(
                   (a: HistoryData, b: HistoryData) =>
@@ -147,6 +135,7 @@ export default function Page() {
       if (responseAllParticipantsEvent?.success === true) {
         setTotalParticipantEvent(responseAllParticipantsEvent?.data?.events);
       }
+      setLoading(false);
     };
     fetchData();
   }, [data]);
@@ -183,12 +172,24 @@ export default function Page() {
         </div>
         <div className={styles.secondSummaryContainer}>
           <div className={styles.tableItem}>
-            <CustomTable
-              title="Prochain tirages à effectuer"
-              tableType="tirage_s"
-              pageType="tirage_s"
-              rows={dates}
-            />
+            {loading ? (
+              <TableLoader
+                columns={[
+                  { id: "date", minWidth: 100, label: "Date concert" },
+                  { id: "ville", minWidth: 100, label: "Ville" },
+                  { id: "statut", minWidth: 100, label: "Statut" },
+                  { id: "actions", minWidth: 100, label: "Actions" },
+                ]}
+                rowsPerPage={3}
+              />
+            ) : (
+              <CustomTable
+                title="Prochain tirages à effectuer"
+                tableType="tirage_s"
+                pageType="tirage_s"
+                rows={dates}
+              />
+            )}
           </div>
           <div className={styles.chartItem}>
             <h1 className="font-bold">Statistiques</h1>
@@ -200,12 +201,25 @@ export default function Page() {
         </div>
         <div className={styles.thirdSummaryContainer}>
           <div className={styles.tableItem}>
-            <CustomTable
-              title="Dernières dates (historique)"
-              tableType="history"
-              pageType="standard"
-              rows={datesPassed}
-            />
+            {loading ? (
+              <TableLoader
+                columns={[
+                  { id: "date", minWidth: 100, label: "Date" },
+                  { id: "ville", minWidth: 100, label: "Ville" },
+                  { id: "participants", minWidth: 100, label: "Participants" },
+                  { id: "gagnants", minWidth: 100, label: "Gagnants" },
+                  { id: "actions", minWidth: 100, label: "Actions" },
+                ]}
+                rowsPerPage={5}
+              />
+            ) : (
+              <CustomTable
+                title="Dernières dates (historique)"
+                tableType="history"
+                pageType="standard"
+                rows={datesPassed}
+              />
+            )}
           </div>
         </div>
       </div>

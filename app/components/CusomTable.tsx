@@ -463,7 +463,7 @@ export default function CustomTable({
                     getEventStatus(row.date, row.endDate || row.date) === "en_cours";
                   
                   return (
-                    <React.Fragment key={row.id || index}>
+                    <React.Fragment key={`${row.id}-${index}`}>
                       <TableRow 
                         hover 
                         role="checkbox" 
@@ -498,7 +498,7 @@ export default function CustomTable({
                               {column.id === "actions" && (tableType === "tour" || tableType === "date") ? (
                                 // Nouveaux boutons pour tour et date
                                 <NewActionButtons
-                                  eventData={row as DateData}
+                                  eventData={row as any}
                                   onEventUpdated={onEventUpdated || (() => {})}
                                   onToggleDetails={() => handleCollapseToggle(index)}
                                   tableType={tableType}

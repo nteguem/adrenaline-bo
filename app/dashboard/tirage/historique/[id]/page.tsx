@@ -13,6 +13,7 @@ import {
 import { useCookies } from "@/app/context/userContext";
 
 interface ParticipantsData {
+  id?: string;
   nom: string;
   prenom: string;
   email: string;
@@ -22,9 +23,11 @@ interface ParticipantsData {
   ticketUrl: string;
   placement: any; // Changé de [string] à any
   gagnants: number;
+  textInfo?: string;
 }
 
 interface VainqueursData {
+  id?: string;
   nom_participant: string;
   prenom_participant: string;
   email: string;
@@ -60,6 +63,7 @@ export default function Page() {
       : `/api/participants_bo/event/${params.id}`,
     (aurl: string) => fetcherParticipants(aurl, token)
   );
+  const isLoading = !data && !error;
 
   const handleParticipantsClick = () => {
     setActiveTab("participants");
@@ -110,7 +114,16 @@ export default function Page() {
           
         } else if (activeTab === "all_participants") {
           // ← TAB PARTICIPANTS : Structure normale
-          const mappedParticipants = data?.data?.participants.map(
+          // Trier par date de création décroissante pour afficher les plus récents en premier
+          const sorted = (data?.data?.participants || [])
+            .slice()
+            .sort((a: any, b: any) => {
+              const ad = new Date(a?.createdAt || 0).getTime();
+              const bd = new Date(b?.createdAt || 0).getTime();
+              return bd - ad;
+            });
+
+          const mappedParticipants = sorted.map(
             (participant: ParticipantsData) => ({
               id: participant.id || `participant-${Math.random()}`, // Générer un ID si manquant
               nom: participant.nom,
@@ -251,6 +264,7 @@ export default function Page() {
             tableType="history"
             pageType="tour"
             rows={participants}
+            isLoading={isLoading}
           />
         </div>
       </div>

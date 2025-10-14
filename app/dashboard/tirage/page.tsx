@@ -7,6 +7,7 @@ import useSWR from "swr";
 import { fetcherCustom } from "@/app/components/apiFetcher";
 import { useCookies } from "@/app/context/userContext";
 import { currentDayComparator, isDay } from "@/app/helpers/statusHelper";
+import TableLoader from "@/app/helpers/TableLoader";
 interface DateData {
   id: string;
   date: string;
@@ -48,6 +49,7 @@ export default function Page() {
 
   const token = cookie.cookie;
   const [actifDate, setActifDate] = useState<string>("");
+  const [loading, setLoading] = useState(true);
   const { data, error } = useSWR(
     token ? `/api/events` : null,
     (url) => fetcherCustom(url, token),
@@ -64,6 +66,7 @@ export default function Page() {
       return;
     }
     if (data) {
+      setLoading(true);
       const eventSet = new Set();
       const uniqueDates: DateRow[] = data.data.events
         .map(
@@ -75,6 +78,8 @@ export default function Page() {
             venue: string;
             status: string;
             actions: string;
+            _count?: { participants: number };
+            totalParticipants?: number;
           }) => ({
             id: event.id,
             date: event.eventDate, // Adjust based on actual event structure
@@ -82,7 +87,7 @@ export default function Page() {
             ville: event.city, // Adjust based on actual event structure
             salle: event.venue, // Adjust based on actual event structure
             statut: currentDayComparator(event.eventDate), // Adjust based on actual event structure
-            participants: 0,
+            participants: event.totalParticipants || event._count?.participants || 0,
           })
         )
         .filter(
@@ -108,6 +113,7 @@ export default function Page() {
             new Date(b.date).getTime() - new Date(a.date).getTime()
         );
       setDates(uniqueDates);
+      setLoading(false);
     }
   }, [data, error]);
   return (
@@ -184,12 +190,24 @@ export default function Page() {
           </Button>
         </div>
         <div>
-          <CustomTable
-            title=""
-            tableType="tirage_s"
-            pageType="tirage_s"
-            rows={dates}
-          />
+          {loading ? (
+            <TableLoader
+              columns={[
+                { id: "date", minWidth: 100, label: "Date concert" },
+                { id: "ville", minWidth: 100, label: "Ville" },
+                { id: "statut", minWidth: 100, label: "Statut" },
+                { id: "actions", minWidth: 100, label: "Actions" },
+              ]}
+              rowsPerPage={5}
+            />
+          ) : (
+            <CustomTable
+              title=""
+              tableType="tirage_s"
+              pageType="tirage_s"
+              rows={dates}
+            />
+          )}
         </div>
       </div>
     </div>

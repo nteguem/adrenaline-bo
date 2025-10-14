@@ -25,7 +25,7 @@ interface DateRow {
   participants: number;
   statut: string;
   tirage: string;
-  placement: string[];
+  placement?: string[];
   actions: string;
 }
 

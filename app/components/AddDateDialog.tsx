@@ -33,7 +33,7 @@ interface DateRow {
   participants: number;
   statut: string;
   tirage: string;
-  placement: string[];
+  placement?: string[];
   actions: string;
 }
 
@@ -322,7 +322,7 @@ export default function AddDateDialog({
                     onChange={(newDate) => setEndDate(newDate)}
                     format="DD/MM/YYYY"
                     sx={{ width: "100%" }}
-                    minDate={startDate}
+                    minDate={startDate || undefined}
                   />
                 </LocalizationProvider>
               </Grid>
