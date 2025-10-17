@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_DOMAIN;
+const API_BASE_URL = process.env.NEXT_PUBLIC_DOMAIN || 'http://localhost:3001';
 
 interface DateRow {
   date: string;
@@ -21,18 +21,37 @@ export const fetcher = (url: string) =>
   fetch(`${API_BASE_URL}${url}`).then((res) => res.json());
 
 export const fetcherCustom = async (url: string, token?: string) => {
-  return await fetch(`${API_BASE_URL}${url}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  }).then((res) => {
-    if (!res.ok) {
-      throw new Error("Network response was not ok");
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return {
+        success: false,
+        error: `API Error: ${response.status}`,
+        status: response.status,
+        message: response.statusText,
+        details: errorText
+      };
     }
-    return res.json();
-  });
+
+    const data = await response.json();
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error',
+      details: error instanceof Error ? error.message : String(error),
+      type: 'network'
+    };
+  }
 };
 
 export const deleteEvent = async (id: string, token?: string, url?: string) => {
@@ -77,7 +96,7 @@ export const createEvent = async (
   dateDatas?: DateRow
 ) => {
   const dateData = dateDatas;
-  
+
   const eventData = {
     city: dateData?.ville,
     venue: dateData?.salle,
@@ -103,18 +122,37 @@ export const createEvent = async (
 };
 
 export const fetcherParticipants = async (url: string, token?: string) => {
-  return await fetch(`${API_BASE_URL}${url}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  }).then((res) => {
-    if (!res.ok && res.status !== 404) {
-      throw new Error("Network response was not ok");
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+
+    if (!response.ok && response.status !== 404) {
+      const errorText = await response.text();
+      return {
+        success: false,
+        error: `API Error: ${response.status}`,
+        status: response.status,
+        message: response.statusText,
+        details: errorText
+      };
     }
-    return res.json();
-  });
+
+    const data = await response.json();
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error',
+      details: error instanceof Error ? error.message : String(error),
+      type: 'network'
+    };
+  }
 };
 
 export const fetcherParticipantsByEvent = async (
@@ -122,19 +160,42 @@ export const fetcherParticipantsByEvent = async (
   url: string,
   token?: string
 ) => {
-  return await fetch(`${API_BASE_URL}${url}/${id}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  }).then((res) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+
     // Tolérer 404 (aucun tirage/vainqueur pour cet événement)
-    if (!res.ok && res.status !== 404) {
-      throw new Error("Network response was not ok");
+    if (!response.ok && response.status !== 404) {
+      const errorText = await response.text();
+      return {
+        success: false,
+        error: `API Error: ${response.status}`,
+        status: response.status,
+        message: response.statusText,
+        details: errorText
+      };
     }
-    return res.json();
-  });
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error',
+      details: error instanceof Error ? error.message : String(error),
+      type: 'network'
+    };
+  }
 };
 
 export const createTirageByEvent = async (
@@ -168,16 +229,41 @@ export const fetcherEventByID = async (
   url: string,
   token?: string
 ) => {
-  return await fetch(`${API_BASE_URL}${url}/${id}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  }).then((res) => {
-    if (!res.ok) {
-      throw new Error("Network response was not ok");
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      // Tolérer 404 (aucun événement pour cet ID)
+      if (response.status === 404) {
+        return null;
+      }
+
+      return {
+        success: false,
+        error: `API Error: ${response.status}`,
+        status: response.status,
+        message: response.statusText,
+        details: errorText
+      };
     }
-    return res.json();
-  });
+
+    const data = await response.json();
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error',
+      details: error instanceof Error ? error.message : String(error),
+      type: 'network'
+    };
+  }
 };

@@ -74,7 +74,6 @@ export default function NewActionButtons({
       );
 
       if (response) {
-        console.log("Événement mis à jour avec succès");
         onEventUpdated(); // Actualiser les données de la page
         setEditDialogOpen(false);
       }
@@ -94,7 +93,6 @@ export default function NewActionButtons({
       const response = await deleteEvent(eventData.id, token, "/api/events");
       
       if (response) {
-        console.log("Événement supprimé avec succès");
         onEventUpdated(); // Actualiser les données de la page
         setDeleteDialogOpen(false);
       }

@@ -40,8 +40,18 @@ export async function logout() {
 
 export async function getSession() {
   const session = (await cookies()).get("session")?.value;
-  if (!session) return null;
-  return await decrypt(session);
+  
+  if (!session) {
+    return null;
+  }
+  
+  try {
+    const decryptedSession = await decrypt(session);
+    return decryptedSession;
+  } catch (error) {
+    console.error('Error decrypting session:', error);
+    return null;
+  }
 }
 
 export async function updateSession(request: NextRequest) {

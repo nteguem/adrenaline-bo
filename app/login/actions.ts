@@ -37,7 +37,6 @@ export async function login(prevState: any, formData: FormData) {
         }
     }
     const gotresponse = await apiLogin(formData);
-    console.log("gotresponse:", gotresponse)
     if (gotresponse?.success === false) return { error: gotresponse?.message };
     if (gotresponse?.success === true) {
       const gotUser = {email: gotresponse?.user?.email, name: gotresponse?.user?.username, access: gotresponse?.accessToken};

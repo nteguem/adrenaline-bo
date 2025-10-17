@@ -14,10 +14,23 @@ const nextConfig: NextConfig = {
     // Ignorer les erreurs ESLint pendant le build
     ignoreDuringBuilds: true
   },
+  
+  // Configuration optimisée des headers de cache pour BACK OFFICE
   async headers() {
     return [
+      // Assets statiques - Cache 1 an
       {
-        // matching all API routes
+        source: '/:all*(css|js|gif|svg|jpg|jpeg|png|woff|woff2|avif|webp)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      
+      // API Back Office - PAS DE CACHE (données sensibles et temps réel)
+      {
         source: '/api/:path*',
         headers: [
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
@@ -30,6 +43,21 @@ const nextConfig: NextConfig = {
             key: 'Access-Control-Allow-Headers',
             value:
               'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+          },
+          {
+            key: 'Cache-Control',
+            value: 'private, no-cache, no-store, must-revalidate'
+          }
+        ]
+      },
+      
+      // Dashboard - Pas de cache (données administratives)
+      {
+        source: '/dashboard/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'private, no-cache, no-store, must-revalidate'
           }
         ]
       }

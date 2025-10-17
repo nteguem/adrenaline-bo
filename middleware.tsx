@@ -20,7 +20,6 @@ export default async function middleware(req: NextRequest) {
   // 3. Decrypt the session from the cookie
   const cookie = (await cookies()).get("session")?.value;
   // const sessionCookie = req.cookies;
-  // console.log("session got:", sessionCookie.get("session")?.value);
   const session = { userId: cookie };
 
   // 4. Redirect to /login if the user is not authenticated
@@ -34,7 +33,6 @@ export default async function middleware(req: NextRequest) {
     session?.userId &&
     !req.nextUrl.pathname.startsWith("/dashboard")
   ) {
-    // console.log("succesfully authenticated:", session?.userId);
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 

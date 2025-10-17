@@ -112,13 +112,11 @@ const formatDateNaissance = (dateString: string | undefined | null): string => {
 const formatPlacement = (placement: any): React.ReactNode => {
   // Vérification simple et directe
   if (!placement) {
-    console.log("Placement est null/undefined");
     return <Typography variant="body2" style={{ color: '#888' }}>Aucune information</Typography>;
   }
 
   // Test direct avec vos données d'exemple
   if (placement.rang && placement.siege) {
-    console.log("Trouvé rang et siege:", placement.rang, placement.siege);
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
         <Chip
@@ -150,7 +148,6 @@ const formatPlacement = (placement: any): React.ReactNode => {
   // Fallback pour tous les autres types de placement
   const entries = Object.entries(placement).filter(([key, value]) => {
     const isValid = value !== undefined && value !== "" && value !== null;
-    console.log(`Clé: ${key}, Valeur: ${value}, Valide: ${isValid}`);
     return isValid;
   });
   

@@ -191,8 +191,6 @@ export default function Page() {
     setAddingEvent(true);
     
     try {
-      console.log("Date à envoyer:", newDate);
-      console.log("Placement data:", newDate.placement);
       
       const response = await createEvent("/api/events", token, newDate);
       
