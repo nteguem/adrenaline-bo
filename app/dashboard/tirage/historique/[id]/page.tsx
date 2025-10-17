@@ -11,6 +11,8 @@ import {
   fetcherParticipants,
 } from "@/app/components/apiFetcher";
 import { useCookies } from "@/app/context/userContext";
+// ✅ ARCHITECTURE : Importer les hooks optimisés existants
+import { useVainqueursBO, useParticipantsByEventBO } from "@/app/hooks/useOptimizedSWR";
 
 interface ParticipantsData {
   id?: string;
@@ -57,14 +59,16 @@ export default function Page() {
   const url = `${pathname}${searchParams}`;
   const params = useParams<{ tag: string; id: string }>();
   const token = cookie.cookie;
-  const { data, error } = useSWR(
-    activeTab === "participants"
-      ? `/api/vainqueurs/event/${params.id}`
-      : `/api/participants_bo/event/${params.id}`,
-    (aurl: string) => fetcherParticipants(aurl, token)
-  );
+  // ✅ ARCHITECTURE : Utiliser les hooks optimisés existants
+  const { data: winnersData, error: winnersError } = useVainqueursBO(params.id, token);
+  const { data: participantsData, error: participantsError } = useParticipantsByEventBO(params.id, token);
+
+  // ✅ ARCHITECTURE : Logique de sélection simplifiée selon l'onglet actif
+  const data = activeTab === "participants" ? winnersData : participantsData;
+  const error = activeTab === "participants" ? winnersError : participantsError;
   const isLoading = !data && !error;
 
+  // ✅ ARCHITECTURE : Handlers simplifiés - les hooks optimisés gèrent le cache automatiquement
   const handleParticipantsClick = () => {
     setActiveTab("participants");
   };
@@ -86,12 +90,17 @@ export default function Page() {
     return returnDate;
   };
 
+  // ✅ ARCHITECTURE : Les hooks optimisés gèrent automatiquement le cache selon l'architecture
+
   useEffect(() => {
+    // ✅ ARCHITECTURE : Logs simplifiés pour le debugging
+    console.log('🔍 [ARCHITECTURE] useEffect triggered:', { activeTab, hasData: !!data, hasError: !!error });
     if (data) {
       const gotdata = data?.data;
       if (gotdata) {
         if (activeTab === "participants") {
           // ← TAB VAINQUEURS : Structure avec participant imbriqué
+          console.log('🏆 [ARCHITECTURE] Processing winners:', gotdata.vainqueurs?.length || 0);
           const tirageDate = customdateFormat(data?.data?.tirage?.dateTirage);
           setTiragedateInfo(tirageDate);
           
@@ -114,6 +123,7 @@ export default function Page() {
           
         } else if (activeTab === "all_participants") {
           // ← TAB PARTICIPANTS : Structure normale
+          console.log('👥 [ARCHITECTURE] Processing participants:', gotdata.participants?.length || 0);
           // Trier par date de création décroissante pour afficher les plus récents en premier
           const sorted = (data?.data?.participants || [])
             .slice()
@@ -137,11 +147,15 @@ export default function Page() {
               gagnants: 0,
             })
           );
+          console.log('✅ [ARCHITECTURE] Participants mapped:', mappedParticipants.length);
           setParticipants(mappedParticipants);
         }
       } else if (data?.data === undefined && data?.success === false) {
+        console.log('❌ [ARCHITECTURE] No data or error in response');
         setParticipants([]);
       }
+    } else {
+      console.log('⚠️ [ARCHITECTURE] No data available');
     }
   }, [data, activeTab]);
 
