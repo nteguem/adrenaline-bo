@@ -3,7 +3,7 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-const secretKey = "secret";
+const secretKey = process.env.SESSION_SECRET || "dev-secret";
 const key = new TextEncoder().encode(secretKey);
 
 export async function encrypt(payload: any) {

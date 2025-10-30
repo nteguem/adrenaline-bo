@@ -1,15 +1,7 @@
 "use client";
 // import { login } from "@/app/lib/lib";
 import { login } from "./actions";
-import {
-  Box,
-  Button,
-  Checkbox,
-  Container,
-  FormControlLabel,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Checkbox, FormControlLabel, Typography } from "@mui/material";
 import Image from "next/image";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -61,11 +53,11 @@ export default function Page() {
               placeholder={"example@gmail.com"}
               id="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onPaste={(e) => {
-                // Forcer la mise à jour après le paste
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.currentTarget.value)}
+              onPaste={(e: React.ClipboardEvent<HTMLInputElement>) => {
+                const input = e.currentTarget;
                 setTimeout(() => {
-                  setEmail(e.target.value);
+                  setEmail(input.value);
                 }, 0);
               }}
               name={"email"}
@@ -80,11 +72,11 @@ export default function Page() {
               id="password"
               placeholder={"******"}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onPaste={(e) => {
-                // Forcer la mise à jour après le paste
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.currentTarget.value)}
+              onPaste={(e: React.ClipboardEvent<HTMLInputElement>) => {
+                const input = e.currentTarget;
                 setTimeout(() => {
-                  setPassword(e.target.value);
+                  setPassword(input.value);
                 }, 0);
               }}
               name={"password"}

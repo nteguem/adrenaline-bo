@@ -11,8 +11,9 @@ const loginSchema = z.object({
 export async function apiLogin(formData: FormData) {
     try {
         const postdata = {email: formData.get("email"), password: formData.get("password")}
+        const baseUrl = process.env.NEXT_PUBLIC_DOMAIN || "http://localhost:3001";
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_DOMAIN}/api/auth/login`,
+          `${baseUrl}/api/auth/login`,
           {
             method: "POST",
             headers: {
@@ -21,10 +22,18 @@ export async function apiLogin(formData: FormData) {
             body: JSON.stringify(postdata),
           }
         );
-        const data = await response.json(); // Parse the response data
-        return data;
+        // Handle non-200 responses
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+            return {
+                success: false,
+                message: data?.message || `Erreur d'authentification (${response.status})`
+            };
+        }
+        return data || { success: false, message: "Réponse invalide du service d'authentification" };
     }catch (err) {
         console.error("Error during login:", err);
+        return { success: false, message: "Impossible de joindre le service d'authentification" };
     }
 }
 
@@ -37,10 +46,12 @@ export async function login(prevState: any, formData: FormData) {
         }
     }
     const gotresponse = await apiLogin(formData);
-    if (gotresponse?.success === false) return { error: gotresponse?.message };
+    if (!gotresponse) return { error: "Réponse invalide du service d'authentification" };
+    if (gotresponse?.success === false) return { error: gotresponse?.message || "Échec de l'authentification" };
     if (gotresponse?.success === true) {
       const gotUser = {email: gotresponse?.user?.email, name: gotresponse?.user?.username, access: gotresponse?.accessToken};
       await createSession(gotUser);
       redirect("/dashboard");
     }
+    return { error: "Échec de l'authentification" };
 }
