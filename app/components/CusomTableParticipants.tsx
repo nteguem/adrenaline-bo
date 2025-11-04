@@ -19,7 +19,7 @@ import SubTableContent from "./SubTableContent";
 import TableLoader from "@/app/helpers/TableLoader";
 
 interface GeneralColumn {
-  id: "nom" | "prenom" | "email" | "phone" | "dateNaissance" | "ticketUrl" | "placement";
+  id: "nom" | "prenom" | "email" | "phone" | "dateNaissance" | "placement";
   label: string;
   minWidth?: number;
   align?: "right" | "left" | "center";
@@ -27,7 +27,7 @@ interface GeneralColumn {
 }
 
 interface HistoryColumn {
-  id: "nom" | "prenom" | "email" | "phone" | "dateNaissance" | "ticketUrl" | "placement";
+  id: "nom" | "prenom" | "email" | "phone" | "dateNaissance" | "placement";
   label: string;
   minWidth?: number;
   align?: "right" | "left" | "center";
@@ -40,7 +40,7 @@ const columns: readonly GeneralColumn[] = [
   { id: "email", label: "EMAIL", minWidth: 200 },
   { id: "phone", label: "TÉLÉPHONE", minWidth: 130 },
   { id: "dateNaissance", label: "DATE DE NAISSANCE", minWidth: 150 },
-  { id: "ticketUrl", label: "PHOTO DU BILLET", minWidth: 140 },
+  // { id: "ticketUrl", label: "PHOTO DU BILLET", minWidth: 140 },
   { id: "placement", label: "INFORMATION DE PLACEMENT", minWidth: 200 },
 ];
 
@@ -50,7 +50,7 @@ const historyColumns: readonly HistoryColumn[] = [
   { id: "email", label: "EMAIL", minWidth: 200 },
   { id: "phone", label: "TÉLÉPHONE", minWidth: 130 },
   { id: "dateNaissance", label: "DATE DE NAISSANCE", minWidth: 150 },
-  { id: "ticketUrl", label: "PHOTO DU BILLET", minWidth: 140 },
+  // { id: "ticketUrl", label: "PHOTO DU BILLET", minWidth: 140 },
   { id: "placement", label: "INFORMATION DE PLACEMENT", minWidth: 200 },
 ];
 
@@ -73,7 +73,7 @@ interface Data {
   email: string;
   phone: string | undefined;
   dateNaissance: string;
-  ticketUrl: string;
+  // ticketUrl: string;
   placement: Placement;
   textInfo: string;
 }
@@ -85,7 +85,7 @@ interface HistoryData {
   email: string;
   phone: string | undefined;
   dateNaissance: string;
-  ticketUrl: string;
+  // ticketUrl: string;
   placement: Placement;
   textInfo: string;
 }
@@ -184,7 +184,7 @@ function createData(participant: any): Data {
     email: participant.email,
     phone: participant.phone && participant.phone.trim() !== "" ? participant.phone : "N/A",
     dateNaissance: participant.dateNaissance,
-    ticketUrl: participant.ticketUrl,
+    // ticketUrl: participant.ticketUrl,
     placement: participant.placement, // Passage direct sans transformation
     textInfo: participant.textInfo
   };
@@ -198,7 +198,7 @@ function createHistoryData(participant: any): HistoryData {
     email: participant.email,
     phone: participant.phone && participant.phone.trim() !== "" ? participant.phone : "N/A",
     dateNaissance: participant.dateNaissance,
-    ticketUrl: participant.ticketUrl,
+    // ticketUrl: participant.ticketUrl,
     placement: participant.placement,
     textInfo: participant.textInfo
   };
@@ -315,8 +315,8 @@ export default function CustomTableParticipants({
                               const value = row[column.id as keyof typeof row];
                               
                               switch (column.id) {
-                                case "ticketUrl":
-                                  return <TicketDisplay ticketUrl={value as string} />;
+                                // case "ticketUrl":
+                                //   return <TicketDisplay ticketUrl={value as string} />;
                                 
                                 case "dateNaissance":
                                   return formatDateNaissance(value as string);

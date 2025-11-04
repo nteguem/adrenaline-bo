@@ -22,7 +22,7 @@ interface ParticipantsData {
   phone: string;
   dateNaissance: string; // ← AJOUTÉ
   ticketInfo: string;
-  ticketUrl: string;
+  // ticketUrl: string;
   placement: any; // Changé de [string] à any
   gagnants: number;
   textInfo?: string;
@@ -34,13 +34,13 @@ interface VainqueursData {
   prenom_participant: string;
   email: string;
   ticketInfo: string;
-  ticketUrl: string;
+  // ticketUrl: string;
   rangs: number;
   participant: { // ← STRUCTURE IMBRIQUÉE DES VAINQUEURS
     phone: string;
     dateNaissance: string;
     placement: any;
-    ticketUrl: string;
+    // ticketUrl: string;
     textInfo: string;
   };
 }
@@ -114,7 +114,7 @@ export default function Page() {
               phone: vainqueur.participant?.phone || "N/A",
               dateNaissance: vainqueur.participant?.dateNaissance || "",
               placement: vainqueur.participant?.placement || {},
-              ticketUrl: vainqueur.participant?.ticketUrl || vainqueur.ticketUrl || "",
+              // ticketUrl: vainqueur.participant?.ticketUrl || vainqueur.ticketUrl || "",
               textInfo: vainqueur.participant?.textInfo || vainqueur.ticketInfo || "",
               gagnants: 0,
             })
@@ -142,7 +142,7 @@ export default function Page() {
               phone: participant.phone || "N/A",
               dateNaissance: participant.dateNaissance || "",
               placement: participant.placement || {},
-              ticketUrl: participant.ticketUrl || "",
+              // ticketUrl: participant.ticketUrl || "",
               textInfo: participant.textInfo || "",
               gagnants: 0,
             })
@@ -177,7 +177,7 @@ export default function Page() {
     csvContent += "Nom,Prénom,Email,Téléphone,Date de naissance,N° Billet\n";
 
     participants.forEach((participant: ParticipantsData) => {
-      csvContent += `"${participant.nom}","${participant.prenom}","${participant.email}","${participant.phone}","${participant.dateNaissance ? new Date(participant.dateNaissance).toLocaleDateString() : 'N/A'}","${participant.ticketUrl}"\n`;
+      csvContent += `"${participant.nom}","${participant.prenom}","${participant.email}","${participant.phone}","${participant.dateNaissance ? new Date(participant.dateNaissance).toLocaleDateString() : 'N/A'}"\n`;
     });
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
