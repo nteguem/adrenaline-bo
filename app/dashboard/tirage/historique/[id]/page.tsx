@@ -1,11 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { usePathname, useSearchParams } from "next/navigation";
 import styles from "@/app/ui/dashboard/tirage/tirage.module.css";
 import { Button } from "@mui/material";
 import CustomTableParticipants from "@/app/components/CusomTableParticipants";
-import useSWR from "swr";
 import {
   fetcherEventByID,
 } from "@/app/components/apiFetcher";
@@ -45,7 +43,6 @@ interface VainqueursData {
 }
 
 export default function Page() {
-  const [participants, setParticipants] = useState<ParticipantsData[]>([]);
   const [event, setEvent] = useState<any>(null);
 
   const [activeTab, setActiveTab] = useState<
@@ -53,9 +50,6 @@ export default function Page() {
   >("participants");
   const [tiragedateInfo, setTiragedateInfo] = useState<string>("");
   const cookie = useCookies();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const url = `${pathname}${searchParams}`;
   const params = useParams<{ tag: string; id: string }>();
   const token = cookie.cookie;
   // ✅ ARCHITECTURE : Utiliser les hooks optimisés existants
@@ -89,54 +83,36 @@ export default function Page() {
     return returnDate;
   };
 
-  // ✅ ARCHITECTURE : Les hooks optimisés gèrent automatiquement le cache selon l'architecture
-
-  useEffect(() => {
+  // ✅ ARCHITECTURE : Calculer les participants avec useMemo pour éviter les re-renders inutiles
+  const participants = React.useMemo(() => {
     if (activeTab === "participants") {
-      // ← TAB VAINQUEURS 
-      // ✅ FIX : winnersData est déjà l'objet final, pas besoin de .data
-      if (!winnersData) {
-        return;
-      }
+      // TAB VAINQUEURS
+      if (!winnersData) return [];
 
-      // ✅ FIX : Accéder directement à winnersData
       const vainqueursData = winnersData.data || winnersData;
-      
-      if (vainqueursData?.tirage?.dateTirage) {
-        const tirageDate = customdateFormat(vainqueursData.tirage.dateTirage);
-        setTiragedateInfo(tirageDate);
-      }
-      
-      if (Array.isArray(vainqueursData?.vainqueurs)) {
-        const mappedVainqueurs = vainqueursData.vainqueurs.map(
-          (vainqueur: VainqueursData) => ({
-            id: vainqueur.id || `vainqueur-${Math.random()}`,
-            nom: vainqueur.nom_participant,
-            prenom: vainqueur.prenom_participant,
-            email: vainqueur.email,
-            phone: vainqueur.participant?.phone || "N/A",
-            dateNaissance: vainqueur.participant?.dateNaissance || "",
-            placement: vainqueur.participant?.placement || {},
-            textInfo: vainqueur.participant?.textInfo || vainqueur.ticketInfo || "",
-            ticketInfo: vainqueur.ticketInfo || "",
-            gagnants: 0,
-          })
-        );
-        setParticipants(mappedVainqueurs);
-      }
-      
-    } else if (activeTab === "all_participants") {
-      // ← TAB PARTICIPANTS
-      // ✅ FIX : participantsData est déjà l'objet final { participants: [], pagination: {} }
-      if (!participantsData) {
-        return;
-      }
 
-      // ✅ FIX : Accéder directement à participantsData.participants
+      if (Array.isArray(vainqueursData?.vainqueurs)) {
+        return vainqueursData.vainqueurs.map((vainqueur: VainqueursData) => ({
+          id: vainqueur.id || `vainqueur-${Math.random()}`,
+          nom: vainqueur.nom_participant,
+          prenom: vainqueur.prenom_participant,
+          email: vainqueur.email,
+          phone: vainqueur.participant?.phone || "N/A",
+          dateNaissance: vainqueur.participant?.dateNaissance || "",
+          placement: vainqueur.participant?.placement || {},
+          textInfo: vainqueur.participant?.textInfo || vainqueur.ticketInfo || "",
+          ticketInfo: vainqueur.ticketInfo || "",
+          gagnants: 0,
+        }));
+      }
+      return [];
+    } else {
+      // TAB PARTICIPANTS
+      if (!participantsData) return [];
+
       const participantsArray = participantsData.participants;
-      
+
       if (Array.isArray(participantsArray)) {
-        // Trier par date de création décroissante
         const sorted = participantsArray
           .slice()
           .sort((a: any, b: any) => {
@@ -145,24 +121,33 @@ export default function Page() {
             return bd - ad;
           });
 
-        const mappedParticipants = sorted.map(
-          (participant: ParticipantsData) => ({
-            id: participant.id || `participant-${Math.random()}`,
-            nom: participant.nom,
-            prenom: participant.prenom,
-            email: participant.email,
-            phone: participant.phone || "N/A",
-            dateNaissance: participant.dateNaissance || "",
-            placement: participant.placement || {},
-            textInfo: participant.textInfo || "",
-            ticketInfo: participant.ticketInfo || "",
-            gagnants: 0,
-          })
-        );
-        setParticipants(mappedParticipants);
+        return sorted.map((participant: ParticipantsData) => ({
+          id: participant.id || `participant-${Math.random()}`,
+          nom: participant.nom,
+          prenom: participant.prenom,
+          email: participant.email,
+          phone: participant.phone || "N/A",
+          dateNaissance: participant.dateNaissance || "",
+          placement: participant.placement || {},
+          textInfo: participant.textInfo || "",
+          ticketInfo: participant.ticketInfo || "",
+          gagnants: 0,
+        }));
       }
+      return [];
     }
   }, [activeTab, winnersData, participantsData]);
+
+  // ✅ Mettre à jour tiragedateInfo uniquement quand nécessaire
+  useEffect(() => {
+    if (activeTab === "participants" && winnersData) {
+      const vainqueursData = winnersData.data || winnersData;
+      if (vainqueursData?.tirage?.dateTirage) {
+        const tirageDate = customdateFormat(vainqueursData.tirage.dateTirage);
+        setTiragedateInfo(tirageDate);
+      }
+    }
+  }, [activeTab, winnersData]);
 
   useEffect(() => {
     if (params.id && token)
