@@ -7,10 +7,6 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import {
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
   Box,
   IconButton,
   Typography,
@@ -47,18 +43,6 @@ interface AddDateDialogProps {
   triggerButton?: React.ReactNode; // Pour personnaliser le bouton déclencheur
 }
 
-// Générer les options d'heures (00:00 à 23:30 par tranches de 30min)
-const generateTimeOptions = () => {
-  const times = [];
-  for (let hour = 0; hour < 24; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
-      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-      times.push(timeString);
-    }
-  }
-  return times;
-};
-
 export default function AddDateDialog({ 
   addDate, 
   editEvent,
@@ -88,8 +72,6 @@ export default function AddDateDialog({
   const [tirage, setTirage] = React.useState("");
   
   const [placementFields, setPlacementFields] = React.useState<string[]>([""]);
-
-  const timeOptions = generateTimeOptions();
 
   // Fonction pour extraire la date et l'heure d'un ISO string
   const extractDateAndTime = (isoString: string) => {
@@ -288,20 +270,15 @@ export default function AddDateDialog({
               </Grid>
               
               <Grid item xs={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Heure de début</InputLabel>
-                  <Select
-                    value={startTime}
-                    label="Heure de début"
-                    onChange={(e) => setStartTime(e.target.value)}
-                  >
-                    {timeOptions.map((time) => (
-                      <MenuItem key={time} value={time}>
-                        {time}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <TextField
+                  fullWidth
+                  label="Heure de début"
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{ step: 60 }}
+                />
               </Grid>
             </Grid>
           </Box>
@@ -327,20 +304,15 @@ export default function AddDateDialog({
               </Grid>
               
               <Grid item xs={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Heure de fin</InputLabel>
-                  <Select
-                    value={endTime}
-                    label="Heure de fin"
-                    onChange={(e) => setEndTime(e.target.value)}
-                  >
-                    {timeOptions.map((time) => (
-                      <MenuItem key={time} value={time}>
-                        {time}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <TextField
+                  fullWidth
+                  label="Heure de fin"
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{ step: 60 }}
+                />
               </Grid>
             </Grid>
           </Box>

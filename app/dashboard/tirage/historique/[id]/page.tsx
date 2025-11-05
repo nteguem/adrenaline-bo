@@ -31,13 +31,11 @@ interface VainqueursData {
   prenom_participant: string;
   email: string;
   ticketInfo: string;
-  // ticketUrl: string;
-  rangs: number;
-  participant: { // ← STRUCTURE IMBRIQUÉE DES VAINQUEURS
+  rang: number; // ← Corrigé: "rang" au singulier comme dans l'API
+  participant: {
     phone: string;
     dateNaissance: string;
     placement: any;
-    // ticketUrl: string;
     textInfo: string;
   };
 }
@@ -83,45 +81,35 @@ export default function Page() {
     return returnDate;
   };
 
-  // ✅ ARCHITECTURE : Calculer les participants avec useMemo pour éviter les re-renders inutiles
   const participants = React.useMemo(() => {
     if (activeTab === "participants") {
-      // TAB VAINQUEURS
-      if (!winnersData) return [];
+      // Liste des gagnants
+      if (!winnersData?.data?.vainqueurs) return [];
 
-      const vainqueursData = winnersData.data || winnersData;
-
-      if (Array.isArray(vainqueursData?.vainqueurs)) {
-        return vainqueursData.vainqueurs.map((vainqueur: VainqueursData) => ({
-          id: vainqueur.id || `vainqueur-${Math.random()}`,
-          nom: vainqueur.nom_participant,
-          prenom: vainqueur.prenom_participant,
-          email: vainqueur.email,
-          phone: vainqueur.participant?.phone || "N/A",
-          dateNaissance: vainqueur.participant?.dateNaissance || "",
-          placement: vainqueur.participant?.placement || {},
-          textInfo: vainqueur.participant?.textInfo || vainqueur.ticketInfo || "",
-          ticketInfo: vainqueur.ticketInfo || "",
-          gagnants: 0,
-        }));
-      }
-      return [];
+      return winnersData.data.vainqueurs.map((vainqueur: VainqueursData) => ({
+        id: vainqueur.id || `vainqueur-${Math.random()}`,
+        nom: vainqueur.nom_participant,
+        prenom: vainqueur.prenom_participant,
+        email: vainqueur.email,
+        phone: vainqueur.participant?.phone || "N/A",
+        dateNaissance: vainqueur.participant?.dateNaissance || "",
+        placement: vainqueur.participant?.placement || {},
+        textInfo: vainqueur.participant?.textInfo || "",
+        ticketInfo: vainqueur.ticketInfo || "",
+        gagnants: 0,
+      }));
     } else {
-      // TAB PARTICIPANTS
-      if (!participantsData) return [];
+      // Liste des participants
+      if (!participantsData?.participants) return [];
 
-      const participantsArray = participantsData.participants;
-
-      if (Array.isArray(participantsArray)) {
-        const sorted = participantsArray
-          .slice()
-          .sort((a: any, b: any) => {
-            const ad = new Date(a?.createdAt || 0).getTime();
-            const bd = new Date(b?.createdAt || 0).getTime();
-            return bd - ad;
-          });
-
-        return sorted.map((participant: ParticipantsData) => ({
+      return participantsData.participants
+        .slice()
+        .sort((a: any, b: any) => {
+          const ad = new Date(a?.createdAt || 0).getTime();
+          const bd = new Date(b?.createdAt || 0).getTime();
+          return bd - ad;
+        })
+        .map((participant: ParticipantsData) => ({
           id: participant.id || `participant-${Math.random()}`,
           nom: participant.nom,
           prenom: participant.prenom,
@@ -133,19 +121,13 @@ export default function Page() {
           ticketInfo: participant.ticketInfo || "",
           gagnants: 0,
         }));
-      }
-      return [];
     }
   }, [activeTab, winnersData, participantsData]);
 
-  // ✅ Mettre à jour tiragedateInfo uniquement quand nécessaire
   useEffect(() => {
-    if (activeTab === "participants" && winnersData) {
-      const vainqueursData = winnersData.data || winnersData;
-      if (vainqueursData?.tirage?.dateTirage) {
-        const tirageDate = customdateFormat(vainqueursData.tirage.dateTirage);
-        setTiragedateInfo(tirageDate);
-      }
+    if (activeTab === "participants" && winnersData?.data?.tirage?.dateTirage) {
+      const tirageDate = customdateFormat(winnersData.data.tirage.dateTirage);
+      setTiragedateInfo(tirageDate);
     }
   }, [activeTab, winnersData]);
 
@@ -178,7 +160,14 @@ export default function Page() {
     document.body.removeChild(link);
   };
 
-  if (error) return <div>Error loading participants</div>;
+  if (error) {
+    console.error('Error loading data:', { winnersError, participantsError, activeTab });
+    return <div>Error loading {activeTab === "participants" ? "winners" : "participants"}</div>;
+  }
+  
+  if (!winnersData && !participantsData && !winnersError && !participantsError) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className={styles.container}>
