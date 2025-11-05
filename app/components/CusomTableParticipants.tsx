@@ -19,7 +19,7 @@ import SubTableContent from "./SubTableContent";
 import TableLoader from "@/app/helpers/TableLoader";
 
 interface GeneralColumn {
-  id: "nom" | "prenom" | "email" | "phone" | "dateNaissance" | "placement";
+  id: "nom" | "prenom" | "email" | "phone" | "dateNaissance" | "placement" | "accepteInfos";
   label: string;
   minWidth?: number;
   align?: "right" | "left" | "center";
@@ -27,7 +27,7 @@ interface GeneralColumn {
 }
 
 interface HistoryColumn {
-  id: "nom" | "prenom" | "email" | "phone" | "dateNaissance" | "placement";
+  id: "nom" | "prenom" | "email" | "phone" | "dateNaissance" | "placement" | "accepteInfos";
   label: string;
   minWidth?: number;
   align?: "right" | "left" | "center";
@@ -42,6 +42,7 @@ const columns: readonly GeneralColumn[] = [
   { id: "dateNaissance", label: "DATE DE NAISSANCE", minWidth: 150 },
   // { id: "ticketUrl", label: "PHOTO DU BILLET", minWidth: 140 },
   { id: "placement", label: "INFORMATION DE PLACEMENT", minWidth: 200 },
+  { id: "accepteInfos", label: "SOUHAITE INFOS", minWidth: 100 },
 ];
 
 const historyColumns: readonly HistoryColumn[] = [
@@ -52,6 +53,7 @@ const historyColumns: readonly HistoryColumn[] = [
   { id: "dateNaissance", label: "DATE DE NAISSANCE", minWidth: 150 },
   // { id: "ticketUrl", label: "PHOTO DU BILLET", minWidth: 140 },
   { id: "placement", label: "INFORMATION DE PLACEMENT", minWidth: 200 },
+  { id: "accepteInfos", label: "SOUHAITE INFOS", minWidth: 100 },
 ];
 
 interface Placement {
@@ -76,6 +78,7 @@ interface Data {
   // ticketUrl: string;
   placement: Placement;
   textInfo: string;
+  accepteInfos: boolean;
 }
 
 interface HistoryData {
@@ -88,6 +91,7 @@ interface HistoryData {
   // ticketUrl: string;
   placement: Placement;
   textInfo: string;
+  accepteInfos: boolean;
 }
 
 // Fonction pour formater la date de naissance
@@ -186,7 +190,8 @@ function createData(participant: any): Data {
     dateNaissance: participant.dateNaissance,
     // ticketUrl: participant.ticketUrl,
     placement: participant.placement, // Passage direct sans transformation
-    textInfo: participant.textInfo
+    textInfo: participant.textInfo,
+    accepteInfos: participant.accepteInfos ?? false
   };
 }
 
@@ -200,7 +205,8 @@ function createHistoryData(participant: any): HistoryData {
     dateNaissance: participant.dateNaissance,
     // ticketUrl: participant.ticketUrl,
     placement: participant.placement,
-    textInfo: participant.textInfo
+    textInfo: participant.textInfo,
+    accepteInfos: participant.accepteInfos ?? false
   };
 }
 
@@ -329,6 +335,13 @@ export default function CustomTableParticipants({
                                     <div style={{ maxWidth: '180px', wordBreak: 'break-all' }}>
                                       {String(value || "N/A")}
                                     </div>
+                                  );
+                                
+                                case "accepteInfos":
+                                  return (
+                                    <span style={{ color: value ? '#4ade80' : '#f87171', fontWeight: 'bold' }}>
+                                      {value ? "Oui" : "Non"}
+                                    </span>
                                   );
                                 
                                 default:

@@ -23,6 +23,7 @@ interface ParticipantsData {
   placement: any; // Changé de [string] à any
   gagnants: number;
   textInfo?: string;
+  accepteInfos?: boolean;
 }
 
 interface VainqueursData {
@@ -37,6 +38,7 @@ interface VainqueursData {
     dateNaissance: string;
     placement: any;
     textInfo: string;
+    accepteInfos?: boolean;
   };
 }
 
@@ -97,6 +99,7 @@ export default function Page() {
         textInfo: vainqueur.participant?.textInfo || "",
         ticketInfo: vainqueur.ticketInfo || "",
         gagnants: 0,
+        accepteInfos: vainqueur.participant?.accepteInfos ?? false,
       }));
     } else {
       // Liste des participants
@@ -120,6 +123,7 @@ export default function Page() {
           textInfo: participant.textInfo || "",
           ticketInfo: participant.ticketInfo || "",
           gagnants: 0,
+          accepteInfos: participant.accepteInfos ?? false,
         }));
     }
   }, [activeTab, winnersData, participantsData]);
@@ -144,10 +148,10 @@ export default function Page() {
         : "Liste des participants"
       } - ${event?.city} (${event?.eventDate ? new Date(event?.eventDate).toLocaleDateString() : ""
       })\n\n`;
-    csvContent += "Nom,Prénom,Email,Téléphone,Date de naissance,N° Billet\n";
+    csvContent += "Nom,Prénom,Email,Téléphone,Date de naissance,Souhaite Infos\n";
 
     participants.forEach((participant: ParticipantsData) => {
-      csvContent += `"${participant.nom}","${participant.prenom}","${participant.email}","${participant.phone}","${participant.dateNaissance ? new Date(participant.dateNaissance).toLocaleDateString() : 'N/A'}"\n`;
+      csvContent += `"${participant.nom}","${participant.prenom}","${participant.email}","${participant.phone}","${participant.dateNaissance ? new Date(participant.dateNaissance).toLocaleDateString() : 'N/A'}","${participant.accepteInfos ? 'Oui' : 'Non'}"\n`;
     });
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
