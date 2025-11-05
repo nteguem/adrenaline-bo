@@ -2,19 +2,19 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* Vos configurations existantes */
-  
+
   // Configuration pour ignorer les erreurs TypeScript
   typescript: {
     // Ignorer les erreurs TypeScript pendant le build
     ignoreBuildErrors: true
   },
-  
+
   // Configuration pour ignorer les erreurs ESLint
   eslint: {
     // Ignorer les erreurs ESLint pendant le build
     ignoreDuringBuilds: true
   },
-  
+
   // Configuration optimisée des headers de cache pour BACK OFFICE
   async headers() {
     return [
@@ -24,11 +24,11 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
+            value: 'private, no-cache, no-store, must-revalidate'
+          }
         ],
       },
-      
+
       // API Back Office - PAS DE CACHE (données sensibles et temps réel)
       {
         source: '/api/:path*',
@@ -50,7 +50,7 @@ const nextConfig: NextConfig = {
           }
         ]
       },
-      
+
       // Dashboard - Pas de cache (données administratives)
       {
         source: '/dashboard/:path*',
