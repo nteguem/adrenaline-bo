@@ -64,10 +64,10 @@ export default function Page() {
 
         if (data.data?.events) {
           data.data.events.map(async (item: any) => {
-            if (currentDayComparator(item.endDate) === "à venir") {
+            if (currentDayComparator(item.eventDate, item.endDate) === "à venir") {
               setTotalEventsToCome(prev => prev + 1);
             }
-            if (currentDayComparator(item.endDate) === "en cours") {
+            if (currentDayComparator(item.eventDate, item.endDate) === "en cours") {
               const uniqueDates: DateRow[] = [
                 {
                   id: item.id,
@@ -83,7 +83,7 @@ export default function Page() {
               ];
               setDates(uniqueDates);
             }
-            if (currentDayComparator(item.endDate) === "passé") {
+            if (currentDayComparator(item.eventDate, item.endDate) === "passé") {
               const uniqueDatesPassed: HistoryData = {
                 id: item.id,
                 date: item.eventDate,

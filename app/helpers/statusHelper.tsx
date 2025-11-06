@@ -1,12 +1,13 @@
-export const currentDayComparator = (date: string) => {
+export const currentDayComparator = (startDate: string, endDate: string) => {
   const currDate = new Date();
-  const givenDate = new Date(date);
+  const givenStartDate = new Date(startDate);
+  const givenEndDate = new Date(endDate);
 
-  if (isDay(date)) {
+  if (currDate >= givenStartDate && currDate <= givenEndDate) {
     return "en cours";
-  } else if (givenDate > currDate) {
+  } else if (givenStartDate > currDate) {
     return "à venir";
-  } else if (givenDate < currDate) {
+  } else if (givenEndDate <= currDate) {
     return "passé";
   }
 };
