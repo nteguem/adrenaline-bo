@@ -57,7 +57,6 @@ export default function TirageDialog({ id, statut }: Props) {
   return (
     <React.Fragment>
       <Button
-        disabled={statut === "passé" || statut === "à venir"}
         variant="outlined"
         onClick={handleClickOpen}
       >
@@ -85,7 +84,6 @@ export default function TirageDialog({ id, statut }: Props) {
             Entrez le nombre de gagnants souhaité pour le tirage
           </DialogContentText>
           <TextField
-            disabled={statut === "passé" || statut === "à venir"}
             autoFocus
             required
             margin="dense"
@@ -112,7 +110,6 @@ export default function TirageDialog({ id, statut }: Props) {
         <DialogActions>
           <Button onClick={handleClose}>Fermer</Button>
           <Button
-            disabled={statut === "passé" || statut === "à venir"}
             type="submit"
             loading={load}
           >

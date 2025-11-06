@@ -48,26 +48,26 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const cookie = useCookies();
   const token = cookie.cookie;
-  
+
       // Utilisation des hooks optimisés
       const { data, error } = useDashboardEvents(token);
       const { data: statisticsData } = useStatisticsBO(token);
-      
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      
+
       if (data) {
         if (data.data?.events) {
           setTotalNumberDates(data.data?.events.length);
         }
-        
+
         if (data.data?.events) {
           data.data.events.map(async (item: any) => {
-            if (currentDayComparator(item.eventDate) === "à venir") {
+            if (currentDayComparator(item.endDate) === "à venir") {
               setTotalEventsToCome(prev => prev + 1);
             }
-            if (currentDayComparator(item.eventDate) === "en cours") {
+            if (currentDayComparator(item.endDate) === "en cours") {
               const uniqueDates: DateRow[] = [
                 {
                   id: item.id,
@@ -83,7 +83,7 @@ export default function Page() {
               ];
               setDates(uniqueDates);
             }
-            if (currentDayComparator(item.eventDate) === "passé") {
+            if (currentDayComparator(item.endDate) === "passé") {
               const uniqueDatesPassed: HistoryData = {
                 id: item.id,
                 date: item.eventDate,
@@ -126,7 +126,7 @@ export default function Page() {
           });
         }
       }
-      
+
       // Fetch additional data with error handling
       try {
         console.log('🔍 Fetching participants from API...');
@@ -134,9 +134,9 @@ export default function Page() {
           "/api/participants_bo",
           token
         );
-        
+
         console.log('📊 Full API response:', responseAllParticipants);
-        
+
         if (responseAllParticipants?.success === true) {
           // ✅ UTILISER LE NOUVEAU CHAMP totalParticipants
           const totalFromAPI = responseAllParticipants?.data?.totalParticipants || 0;
@@ -157,20 +157,20 @@ export default function Page() {
         console.log('⚠️ Error fallback calculation:', calculatedTotal);
         setTotalEventParticipants(calculatedTotal);
       }
-      
+
       try {
         const responseAllParticipantsEvent = await fetcherCustom(
           "/api/events/event_participants",
           token
         );
-        
+
         if (responseAllParticipantsEvent?.success === true) {
           setTotalParticipantEvent(responseAllParticipantsEvent?.data?.events);
-          
+
           // ✅ CALCULER LE TOTAL DEPUIS LES ÉVÉNEMENTS SI L'API PRINCIPALE ÉCHOUE
           if (totalEventParticipants === 0) {
             const calculatedTotal = responseAllParticipantsEvent?.data?.events?.reduce(
-              (sum: number, event: any) => sum + (event.totalParticipants || 0), 
+              (sum: number, event: any) => sum + (event.totalParticipants || 0),
               0
             ) || 0;
             setTotalEventParticipants(calculatedTotal);
@@ -181,7 +181,7 @@ export default function Page() {
       } catch (error) {
         console.error('❌ Error fetching events participants:', error);
       }
-      
+
       setLoading(false);
     };
     fetchData();

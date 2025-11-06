@@ -86,7 +86,7 @@ export default function Page() {
             endDate: event.endDate, // Adjust based on actual event structure
             ville: event.city, // Adjust based on actual event structure
             salle: event.venue, // Adjust based on actual event structure
-            statut: currentDayComparator(event.eventDate), // Adjust based on actual event structure
+            statut: currentDayComparator(event.endDate), // Adjust based on actual event structure
             participants: event.totalParticipants || event._count?.participants || 0,
           })
         )
