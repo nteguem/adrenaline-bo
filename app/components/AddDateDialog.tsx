@@ -31,6 +31,8 @@ interface DateRow {
   tirage: string;
   placement?: string[];
   actions: string;
+  meetTime: string;
+  meetInstructions: string;
 }
 
 interface AddDateDialogProps {
@@ -43,14 +45,14 @@ interface AddDateDialogProps {
   triggerButton?: React.ReactNode; // Pour personnaliser le bouton déclencheur
 }
 
-export default function AddDateDialog({ 
-  addDate, 
+export default function AddDateDialog({
+  addDate,
   editEvent,
-  mode = "add", 
+  mode = "add",
   eventData = null,
   open: controlledOpen,
   onClose: controlledOnClose,
-  triggerButton 
+  triggerButton
 }: AddDateDialogProps) {
   const [internalOpen, setInternalOpen] = React.useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -60,26 +62,29 @@ export default function AddDateDialog({
   // États pour les dates et heures de début
   const [startDate, setStartDate] = React.useState<dayjs.Dayjs | null>(dayjs());
   const [startTime, setStartTime] = React.useState("20:00");
-  
+
   // États pour les dates et heures de fin
   const [endDate, setEndDate] = React.useState<dayjs.Dayjs | null>(dayjs());
   const [endTime, setEndTime] = React.useState("22:00");
-  
+
+  const [meetTime, setMeetTime] = React.useState("19:30");
+  const [meetInstructions, setMeetInstructions] = React.useState("à côté du stand Merchandising");
+
   const [ville, setVille] = React.useState("");
   const [salle, setSalle] = React.useState("");
   const [participants, setParticipants] = React.useState<number | "">("");
   const [statut, setStatut] = React.useState("");
   const [tirage, setTirage] = React.useState("");
-  
+
   const [placementFields, setPlacementFields] = React.useState<string[]>([""]);
 
   // Fonction pour extraire la date et l'heure d'un ISO string
   const extractDateAndTime = (isoString: string) => {
     if (!isoString) return { date: dayjs(), time: "20:00" };
-    
+
     const dateObj = dayjs(isoString);
     const time = dateObj.format("HH:mm");
-    
+
     return { date: dateObj, time };
   };
 
@@ -98,6 +103,8 @@ export default function AddDateDialog({
       setParticipants(eventData.participants || "");
       setStatut(eventData.statut || "");
       setTirage(eventData.tirage || "");
+      setMeetTime(eventData.meetTime || "19:30");
+      setMeetInstructions(eventData.meetInstructions || "à côté du stand Merchandising");
       setPlacementFields(eventData.placement && eventData.placement.length > 0 ? eventData.placement : [""]);
     } else {
       // Reset pour le mode ajout
@@ -116,6 +123,8 @@ export default function AddDateDialog({
     setStatut("");
     setTirage("");
     setPlacementFields([""]);
+    setMeetTime("19:30");
+    setMeetInstructions("à côté du stand Merchandising");
   };
 
   const handleClickOpen = () => {
@@ -157,20 +166,20 @@ export default function AddDateDialog({
   // Calculer la durée de l'événement
   const calculateDuration = () => {
     if (!startDate || !endDate) return "";
-    
+
     const start = startDate.hour(parseInt(startTime.split(':')[0])).minute(parseInt(startTime.split(':')[1]));
     const end = endDate.hour(parseInt(endTime.split(':')[0])).minute(parseInt(endTime.split(':')[1]));
-    
+
     const diffInMinutes = end.diff(start, 'minute');
     const days = Math.floor(diffInMinutes / (24 * 60));
     const hours = Math.floor((diffInMinutes % (24 * 60)) / 60);
     const minutes = diffInMinutes % 60;
-    
+
     let duration = "";
     if (days > 0) duration += `${days} jour${days > 1 ? 's' : ''} `;
     if (hours > 0) duration += `${hours}h `;
     if (minutes > 0) duration += `${minutes}min`;
-    
+
     return duration.trim();
   };
 
@@ -194,7 +203,7 @@ export default function AddDateDialog({
           {mode === "edit" ? "Modifier l'événement" : "+ Ajouter une date"}
         </Button>
       )}
-      
+
       <Dialog
         open={open}
         onClose={handleClose}
@@ -205,15 +214,15 @@ export default function AddDateDialog({
             component: "form",
             onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
               event.preventDefault();
-              
+
               const filteredPlacement = placementFields.filter(field => field.trim() !== "");
-              
+
               // Construire les dates complètes avec ISO pour compatibilité
-              const startDateTime = startDate ? 
+              const startDateTime = startDate ?
                 startDate.hour(parseInt(startTime.split(':')[0])).minute(parseInt(startTime.split(':')[1])).toISOString() : "";
-              const endDateTime = endDate ? 
+              const endDateTime = endDate ?
                 endDate.hour(parseInt(endTime.split(':')[0])).minute(parseInt(endTime.split(':')[1])).toISOString() : "";
-              
+
               const eventToSubmit: DateRow = {
                 id: mode === "edit" ? (eventData?.id || "") : "",
                 date: startDateTime,
@@ -225,7 +234,11 @@ export default function AddDateDialog({
                 tirage,
                 placement: filteredPlacement,
                 actions: "",
+                meetTime,
+                meetInstructions,
               };
+
+              console.log(eventToSubmit);
 
               // Appeler la bonne fonction selon le mode
               if (mode === "edit" && editEvent) {
@@ -233,7 +246,7 @@ export default function AddDateDialog({
               } else if (mode === "add" && addDate) {
                 addDate(eventToSubmit);
               }
-              
+
               handleClose();
             },
           },
@@ -244,18 +257,18 @@ export default function AddDateDialog({
         </DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           <DialogContentText>
-            {mode === "edit" 
+            {mode === "edit"
               ? "Modifiez les informations de l'événement ci-dessous."
               : "Remplissez les informations pour ajouter une nouvelle date d'événement."
             }
           </DialogContentText>
-          
+
           {/* Section Date et Heure de DÉBUT */}
           <Box sx={{ border: "2px solid #4caf50", borderRadius: 2, p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2, color: "#4caf50", display: "flex", alignItems: "center" }}>
               🟢 Début de l'événement
             </Typography>
-            
+
             <Grid container spacing={2}>
               <Grid item xs={6}>
                 <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
@@ -268,7 +281,7 @@ export default function AddDateDialog({
                   />
                 </LocalizationProvider>
               </Grid>
-              
+
               <Grid item xs={6}>
                 <TextField
                   fullWidth
@@ -288,7 +301,7 @@ export default function AddDateDialog({
             <Typography variant="h6" sx={{ mb: 2, color: "#f44336", display: "flex", alignItems: "center" }}>
               🔴 Fin de l'événement
             </Typography>
-            
+
             <Grid container spacing={2}>
               <Grid item xs={6}>
                 <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
@@ -302,7 +315,7 @@ export default function AddDateDialog({
                   />
                 </LocalizationProvider>
               </Grid>
-              
+
               <Grid item xs={6}>
                 <TextField
                   fullWidth
@@ -332,13 +345,13 @@ export default function AddDateDialog({
               <strong>Durée :</strong> {calculateDuration() || "Calculez automatiquement"}
             </Typography>
           </Box>
-          
+
           {/* Section Lieu */}
           <Box sx={{ border: "1px solid #e0e0e0", borderRadius: 2, p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2, color: "#0081E6" }}>
               🏛️ Lieu
             </Typography>
-            
+
             <Grid container spacing={2}>
               <Grid item xs={6}>
                 <TextField
@@ -351,7 +364,7 @@ export default function AddDateDialog({
                   onChange={(e) => setVille(e.target.value)}
                 />
               </Grid>
-              
+
               <Grid item xs={6}>
                 <TextField
                   required
@@ -371,7 +384,7 @@ export default function AddDateDialog({
             <Typography variant="h6" sx={{ mb: 2, color: "#0081E6" }}>
               🎫 Catégories de placement
             </Typography>
-            
+
             {placementFields.map((field, index) => (
               <Box key={index} sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
                 <TextField
@@ -383,7 +396,7 @@ export default function AddDateDialog({
                   onChange={(e) => updatePlacementField(index, e.target.value)}
                   placeholder="Ex: Catégorie 1, Bloc A, Rangée 1-10..."
                 />
-                
+
                 {index > 0 && (
                   <IconButton
                     onClick={() => removePlacementField(index)}
@@ -393,7 +406,7 @@ export default function AddDateDialog({
                     <RemoveIcon />
                   </IconButton>
                 )}
-                
+
                 {index === placementFields.length - 1 && (
                   <IconButton
                     onClick={addPlacementField}
@@ -406,14 +419,47 @@ export default function AddDateDialog({
               </Box>
             ))}
           </Box>
+
+          <Box sx={{ border: "1px solid #e0e0e0", borderRadius: 2, p: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2, color: "#0081E6" }}>
+              Notifications Template
+            </Typography>
+
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <TextField
+                  required
+                  label="Heure de RDV"
+                  type="time"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{ step: 60 }}
+                  value={meetTime}
+                  onChange={(e) => setMeetTime(e.target.value)}
+                />
+              </Grid>
+
+              <Grid item xs={6}>
+                <TextField
+                  required
+                  label="Lieu de RDV"
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  value={meetInstructions}
+                  onChange={(e) => setMeetInstructions(e.target.value)}
+                />
+              </Grid>
+            </Grid>
+          </Box>
         </DialogContent>
-        
+
         <DialogActions>
           <Button onClick={handleClose}>Annuler</Button>
-          <Button 
-            type="submit" 
-            variant="contained" 
-            sx={{ 
+          <Button
+            type="submit"
+            variant="contained"
+            sx={{
               backgroundColor: mode === "edit" ? "#ff9800" : "#0081E6",
               "&:hover": {
                 backgroundColor: mode === "edit" ? "#e68900" : "#0066cc"

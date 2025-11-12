@@ -24,6 +24,8 @@ interface DateRow {
   statut: string;
   tirage: string;
   actions: string;
+  meetTime: string;
+  meetInstructions: string;
 }
 interface HistoryData {
   id: string;

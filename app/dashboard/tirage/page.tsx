@@ -28,6 +28,8 @@ interface DateRow {
   statut: string;
   tirage: string;
   actions: string;
+  meetTime: string;
+  meetInstructions: string;
 }
 
 function createDateData(

@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  Button, 
-  Box, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogContentText, 
+import {
+  Button,
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
   DialogActions,
   IconButton,
   Tooltip,
-  CircularProgress 
+  CircularProgress
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Visibility as ViewIcon } from '@mui/icons-material';
 import AddDateDialog from './AddDateDialog'; // Utiliser le bon nom
@@ -27,6 +27,8 @@ interface DateRow {
   tirage: string;
   placement?: string[];
   actions: string;
+  meetTime: string;
+  meetInstructions: string;
 }
 
 interface NewActionButtonsProps {
@@ -37,25 +39,25 @@ interface NewActionButtonsProps {
   pageType?: string;
 }
 
-export default function NewActionButtons({ 
-  eventData, 
-  onEventUpdated, 
+export default function NewActionButtons({
+  eventData,
+  onEventUpdated,
   onToggleDetails,
   tableType,
-  pageType 
+  pageType
 }: NewActionButtonsProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  
+
   const cookie = useCookies();
   const token = cookie.cookie;
 
   // Gestion de la modification
   const handleEdit = async (updatedEventData: DateRow) => {
     setIsUpdating(true);
-    
+
     try {
       // Préparer les données pour l'API (format attendu par updateEvent)
       const updateData = {
@@ -63,7 +65,9 @@ export default function NewActionButtons({
         endDate: updatedEventData.endDate,
         city: updatedEventData.ville,
         venue: updatedEventData.salle,
-        placement: updatedEventData.placement
+        placement: updatedEventData.placement,
+        meetTime: updatedEventData.meetTime,
+        meetInstructions: updatedEventData.meetInstructions,
       };
 
       const response = await updateEvent(
@@ -88,10 +92,10 @@ export default function NewActionButtons({
   // Gestion de la suppression
   const handleDelete = async () => {
     setIsDeleting(true);
-    
+
     try {
       const response = await deleteEvent(eventData.id, token, "/api/events");
-      
+
       if (response) {
         onEventUpdated(); // Actualiser les données de la page
         setDeleteDialogOpen(false);
@@ -110,7 +114,7 @@ export default function NewActionButtons({
       <Tooltip title="Modifier l'événement">
         <IconButton
           onClick={() => setEditDialogOpen(true)}
-          sx={{ 
+          sx={{
             color: '#ff9800',
             '&:hover': { backgroundColor: 'rgba(255, 152, 0, 0.1)' }
           }}
@@ -124,7 +128,7 @@ export default function NewActionButtons({
       <Tooltip title="Supprimer l'événement">
         <IconButton
           onClick={() => setDeleteDialogOpen(true)}
-          sx={{ 
+          sx={{
             color: '#f44336',
             '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.1)' }
           }}
@@ -139,7 +143,7 @@ export default function NewActionButtons({
         <Tooltip title="Voir les détails">
           <IconButton
             onClick={onToggleDetails}
-            sx={{ 
+            sx={{
               color: '#2196f3',
               '&:hover': { backgroundColor: 'rgba(33, 150, 243, 0.1)' }
             }}
@@ -185,13 +189,13 @@ export default function NewActionButtons({
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button 
+          <Button
             onClick={() => setDeleteDialogOpen(false)}
             disabled={isDeleting}
           >
             Annuler
           </Button>
-          <Button 
+          <Button
             onClick={handleDelete}
             color="error"
             variant="contained"
@@ -205,8 +209,8 @@ export default function NewActionButtons({
 
       {/* Overlay de chargement pour la modification */}
       {isUpdating && (
-        <Box 
-          sx={{ 
+        <Box
+          sx={{
             position: 'fixed',
             top: 0,
             left: 0,

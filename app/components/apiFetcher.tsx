@@ -10,6 +10,8 @@ interface DateRow {
   tirage: string;
   placement: string[]; // Ajout du champ placement
   actions: string;
+  meetTime: string;
+  meetInstructions: string;
 }
 
 interface UpdateEvent {
@@ -104,6 +106,8 @@ export const createEvent = async (
     status: dateData?.statut,
     endDate: dateData?.endDate,
     placement: dateData?.placement || [],
+    meetTime: dateData?.meetTime ?? '',
+    meetInstructions: dateData?.meetInstructions ?? '',
   };
 
   return await fetch(`${API_BASE_URL}${url}`, {

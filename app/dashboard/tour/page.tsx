@@ -26,6 +26,8 @@ interface DateRow {
   tirage: string;
   placement: string[];
   actions: string;
+  meetTime: string;
+  meetInstructions: string;
 }
 
 interface Column {
@@ -48,6 +50,8 @@ interface APIEvent {
   actions: string;
   _count?: { participants: number };
   totalParticipants?: number;
+  meetTime: string;
+  meetInstructions: string;
 }
 
 export default function Page() {
@@ -67,7 +71,7 @@ export default function Page() {
     const now = new Date();
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
+
     if (now >= start && now <= end) {
       return "en_cours";
     } else if (now < start) {
@@ -86,7 +90,7 @@ export default function Page() {
 
     events.forEach(event => {
       const eventStatus = getEventStatus(event.date, event.endDate);
-      
+
       if (eventStatus === "en_cours") {
         current.push({ ...event, statut: "En cours" });
       } else if (eventStatus === "a_venir") {
@@ -98,10 +102,10 @@ export default function Page() {
 
     // Trier les événements en cours par date de début (le plus proche en premier)
     current.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
+
     // Trier les événements à venir par date croissante
     upcoming.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
+
     // Trier les événements passés par date décroissante
     past.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -114,7 +118,7 @@ export default function Page() {
   // Fonction pour filtrer les événements selon le filtre actif
   const applyFilter = (events: DateRow[], filter: EventFilter) => {
     const { current, upcoming, past, upcomingAndCurrent } = classifyAndSortEvents(events);
-    
+
     switch (filter) {
       case "upcoming":
         return upcoming; // Seulement les à venir
@@ -143,9 +147,9 @@ export default function Page() {
   // Fonction pour transformer les données de l'API en DateRow - CORRIGÉE
   const transformAPIEventToDateRow = (event: APIEvent): DateRow => {
     const eventStatus = getEventStatus(event.eventDate, event.endDate);
-    const displayStatus = eventStatus === "en_cours" ? "En cours" : 
+    const displayStatus = eventStatus === "en_cours" ? "En cours" :
                         eventStatus === "a_venir" ? "À venir" : "Passé";
-    
+
     return {
       id: event.id,
       date: event.eventDate,  // CORRECTION : utiliser eventDate au lieu de endDate
@@ -157,7 +161,9 @@ export default function Page() {
       participants: event._count?.participants || event.totalParticipants || 0,
       placement: event.placement || [],
       tirage: "", // Vous pourrez ajouter cette logique selon vos besoins
-      actions: ""
+      actions: "",
+      meetTime: event.meetTime ?? "",
+      meetInstructions: event.meetInstructions ?? "",
     };
   };
 
@@ -165,7 +171,7 @@ export default function Page() {
   const refreshData = async () => {
     try {
       const updatedData = await fetcherCustom("/api/events", token);
-      
+
       if (updatedData) {
         const eventSet = new Set();
         const uniqueDates: DateRow[] = updatedData.data.events
@@ -189,11 +195,12 @@ export default function Page() {
 
   const addDate = async (newDate: DateRow) => {
     setAddingEvent(true);
-    
+
     try {
-      
+
+      console.log('NEW EVENT', newDate);
       const response = await createEvent("/api/events", token, newDate);
-      
+
       if (response.success) {
         await refreshData();
         mutate();
@@ -222,7 +229,7 @@ export default function Page() {
     const year = date.getFullYear();
     const hours = String(date.getHours()).padStart(2, "0");
     const minutes = String(date.getMinutes()).padStart(2, "0");
-    
+
     return `${day}.${month}.${year} ${hours}:${minutes}`;
   };
 
@@ -250,7 +257,7 @@ export default function Page() {
     }
     return null;
   };
-  
+
   const currentDateCalculator = (date: string, id: string) => {
     if (isDay(date)) {
       setActifDate(id);
@@ -286,7 +293,7 @@ export default function Page() {
     const filtered = applyFilter(dates, activeFilter);
     setFilteredDates(filtered);
   }, [dates, activeFilter]);
-  
+
   // Mise à jour en temps réel des participants (optionnel)
   useEffect(() => {
     if (actifDate) {
@@ -297,10 +304,10 @@ export default function Page() {
             "/api/participants_bo/event",
             token
           );
-          
+
           // Mettre à jour seulement si on a une réponse différente
           const newParticipantCount = response.data?.participants.length || 0;
-          
+
           setDates((prevDates) =>
             prevDates.map((event) => {
               if (event.id === actifDate && event.participants !== newParticipantCount) {
@@ -316,7 +323,7 @@ export default function Page() {
           console.error("Erreur lors de la récupération des participants:", error);
         }
       };
-      
+
       customFetcherParticipants();
       setNextEvent(getNextElementById(dates, actifDate));
     }
@@ -330,11 +337,11 @@ export default function Page() {
         <div className={styles.header}>
           <h1 className={styles.headerText}>Adrénaline Tour - Configuration</h1>
         </div>
-        
+
         {/* Loader overlay pendant l'ajout d'événement */}
         {addingEvent && (
-          <Box 
-            sx={{ 
+          <Box
+            sx={{
               position: 'fixed',
               top: 0,
               left: 0,
@@ -357,7 +364,7 @@ export default function Page() {
             </Typography>
           </Box>
         )}
-        
+
         <div className={styles.resumeContainer}>
           <div>
             <Image
@@ -392,7 +399,7 @@ export default function Page() {
             label={`À venir (${eventCounts.upcoming})`}
             onClick={() => setActiveFilter("upcoming")}
             variant={activeFilter === "upcoming" ? "filled" : "outlined"}
-            sx={{ 
+            sx={{
               backgroundColor: activeFilter === "upcoming" ? "#4caf50" : "transparent",
               color: activeFilter === "upcoming" ? "white" : "#fff",
               border: activeFilter === "upcoming" ? "1px solid #4caf50" : "1px solid #666",
@@ -476,13 +483,13 @@ export default function Page() {
             </Button>
           </div>
           <div>
-            <AddDateDialog 
-              mode="add" 
+            <AddDateDialog
+              mode="add"
               addDate={addDate}
             />
           </div>
         </div>
-        
+
         <div>
           {loading ? (
             <TableLoader columns={columnLoad} rowsPerPage={2} />
