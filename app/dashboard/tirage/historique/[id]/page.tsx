@@ -6,6 +6,7 @@ import { Button } from "@mui/material";
 import CustomTableParticipants from "@/app/components/CusomTableParticipants";
 import {
   fetcherEventByID,
+  sendWinnersNotificationByTirage,
 } from "@/app/components/apiFetcher";
 import { useCookies } from "@/app/context/userContext";
 // ✅ ARCHITECTURE : Importer les hooks optimisés existants
@@ -49,6 +50,7 @@ export default function Page() {
     "participants" | "all_participants"
   >("participants");
   const [tiragedateInfo, setTiragedateInfo] = useState<string>("");
+  const [sendNotifText, setSendNotifText] = useState<string>("Envoyer Notifications");
   const cookie = useCookies();
   const params = useParams<{ tag: string; id: string }>();
   const token = cookie.cookie;
@@ -81,6 +83,19 @@ export default function Page() {
     const returnDate = `${day}/${month}/${year} à ${hours}:${minutes}`;
 
     return returnDate;
+  };
+
+  const sendWinnersNotification = async () => {
+    const response = await sendWinnersNotificationByTirage(
+      `/api/vainqueurs/tirage/${winnersData?.data?.tirage?._id}/notification`,
+      token,
+    );
+
+    if (response.success) {
+      setSendNotifText(response?.data?.message ?? "Notifications envoyées");
+    } else {
+      alert('The notification system encountered an error. Please try again.');
+    }
   };
 
   const participants = React.useMemo(() => {
@@ -168,7 +183,7 @@ export default function Page() {
     console.error('Error loading data:', { winnersError, participantsError, activeTab });
     return <div>Error loading {activeTab === "participants" ? "winners" : "participants"}</div>;
   }
-  
+
   if (!winnersData && !participantsData && !winnersError && !participantsError) {
     return <div>Loading...</div>;
   }
@@ -252,6 +267,19 @@ export default function Page() {
           >
             Participants
           </Button>
+          { activeTab === "participants"
+            ? <Button
+                sx={{
+                  backgroundColor: "#0081E6",
+                  color: "white",
+                  textTransform: "none",
+                  padding: "0.6em 2.0em",
+                }}
+                onClick={sendWinnersNotification}
+              >
+                {sendNotifText}
+              </Button>
+            : null }
         </div>
         <div>
           <CustomTableParticipants

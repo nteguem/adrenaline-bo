@@ -198,6 +198,36 @@ export const fetcherParticipantsByEvent = async (
   }
 };
 
+export const sendWinnersNotificationByTirage = async (
+  url: string,
+  token?: string
+) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error',
+      details: error instanceof Error ? error.message : String(error),
+      type: 'network'
+    };
+  }
+};
+
 export const createTirageByEvent = async (
   id: string,
   url: string,
