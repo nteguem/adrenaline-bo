@@ -91,10 +91,15 @@ export default function Page() {
         return;
       }
 
-      // Créer le fichier CSV avec seulement Nom et Email
-      let csvContent = "Nom,Email\n";
+      // Créer le fichier CSV avec seulement Nom et Email (emails en liens)
+      let csvContent = `Liste des emails avec consentement - ${event.city} (${event.eventDate ? new Date(event.eventDate).toLocaleDateString() : ''})\n\n`;
+      csvContent += "NOM,MAIL\n";
+
       uniqueParticipants.forEach((participant) => {
-        csvContent += `"${participant.nom}","${participant.email}"\n`;
+        // Format simple mailto : Excel et Google Sheets reconnaissent automatiquement mailto: comme lien cliquable
+        // Format CSV généré : "Nom","mailto:email@example.com"
+        const emailLink = `mailto:${participant.email}`;
+        csvContent += `"${participant.nom}","${emailLink}"\n`;
       });
 
       // Télécharger le fichier
