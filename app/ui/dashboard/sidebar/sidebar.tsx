@@ -18,6 +18,10 @@ const menuItems = [
         path: "/dashboard/tirage",
       },
       {
+        title: "Export emails",
+        path: "/dashboard/export",
+      },
+      {
         title: "Paramètres",
         path: "/dashboard/parametres",
       },
