@@ -137,7 +137,7 @@ export default function Page() {
           </Typography>
           
           <Typography variant="body2" sx={{ color: "#aaa", mb: 3 }}>
-            Exporter les emails des participants qui ont accepté de recevoir des informations. Un fichier CSV sera créé pour chaque événement avec le nom de l'événement dans le fichier.
+            Exporter les emails des participants qui ont accepté de recevoir des informations. Un fichier Excel (.xlsx) sera créé pour chaque événement avec le nom de l'événement dans le fichier.
           </Typography>
 
           {exportMessage && (
@@ -173,7 +173,7 @@ export default function Page() {
                 Export en cours...
               </>
             ) : (
-              "Exporter les emails avec consentement"
+              "Exporter en Excel (.xlsx)"
             )}
           </Button>
         </Box>
