@@ -4,6 +4,7 @@ import { Button, CircularProgress, Typography, Box, Alert } from "@mui/material"
 import { fetcherCustom } from "@/app/components/apiFetcher";
 import { useCookies } from "@/app/context/userContext";
 import styles from "@/app/ui/dashboard/dashboard.module.css";
+import * as XLSX from "xlsx";
 
 export default function Page() {
   const [isExporting, setIsExporting] = useState(false);
@@ -26,7 +27,7 @@ export default function Page() {
       let totalExported = 0;
       let filesCreated = 0;
 
-      // Parcourir chaque événement et créer un fichier CSV par événement
+      // Parcourir chaque événement et créer un fichier Excel par événement
       for (const event of events) {
         try {
           const allParticipants: Array<{ email: string; nom: string }> = [];
@@ -64,20 +65,31 @@ export default function Page() {
             new Map(allParticipants.map(p => [p.email.toLowerCase(), p])).values()
           );
 
-          // Créer un fichier CSV uniquement s'il y a des participants avec consentement
+          // Créer un fichier uniquement s'il y a des participants avec consentement
           if (uniqueParticipants.length > 0) {
-            // CSV avec seulement Nom et Email (emails en liens)
-            let csvContent = `Liste des emails avec consentement - ${event.city} (${event.eventDate ? new Date(event.eventDate).toLocaleDateString() : ''})\n\n`;
-            csvContent += "NOM,MAIL\n";
-            uniqueParticipants.forEach((participant) => {
-              // Format simple mailto : Excel et Google Sheets reconnaissent automatiquement mailto: comme lien cliquable
-              // Format CSV généré : "Nom","mailto:email@example.com"
-              const emailLink = `mailto:${participant.email}`;
-              csvContent += `"${participant.nom}","${emailLink}"\n`;
+            // Construire le tableau pour XLSX
+            const rows = [
+              ["NOM", "MAIL"],
+              ...uniqueParticipants.map((participant) => [participant.nom || "", participant.email || ""]),
+            ];
+
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+
+            // Ajouter les hyperliens mailto sur la colonne MAIL (affichage = email)
+            uniqueParticipants.forEach((participant, index) => {
+              const cellAddress = XLSX.utils.encode_cell({ r: index + 1, c: 1 }); // Ligne 2+, colonne B
+              ws[cellAddress] = {
+                t: "s",
+                f: `HYPERLINK("mailto:${participant.email}","${participant.email}")`,
+              };
             });
 
-            // Télécharger le fichier pour cet événement
-            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Emails");
+            const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+            const blob = new Blob([wbout], {
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
@@ -85,7 +97,7 @@ export default function Page() {
             // Nom du fichier avec le nom de l'événement
             const eventName = event.city || event.id;
             const eventDate = event.eventDate ? new Date(event.eventDate).toISOString().split('T')[0] : '';
-            const fileName = `emails_consentement_${eventName}_${eventDate}.csv`.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const fileName = `emails_consentement_${eventName}_${eventDate}.xlsx`.replace(/[^a-zA-Z0-9_-]/g, '_');
             
             link.setAttribute("download", fileName);
             document.body.appendChild(link);
